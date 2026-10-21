@@ -1,0 +1,40 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Alcaldía de Ramiriquí</h2>
+    <p class="subtitulo">Ingreso al Sistema de Información</p>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="campo">
+        <label for="usuario">Usuario:</label>
+        <input 
+          id="usuario" 
+          type="text" 
+          [(ngModel)]="credenciales.Usuario" 
+          name="usuario" 
+          placeholder="Ej: contratista_pedro" 
+          required 
+        />
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña:</label>
+        <input 
+          id="contrasena" 
+          type="password" 
+          [(ngModel)]="credenciales.Contrasena" 
+          name="contrasena" 
+          placeholder="••••••••" 
+          required 
+        />
+      </div>
+
+      <button type="submit" [disabled]="cargando">
+        {{ cargando ? 'Verificando...' : 'Iniciar Sesión' }}
+      </button>
+
+      <div *ngIf="mensajeError" class="alerta-error">
+        {{ mensajeError }}
+      </div>
+    </form>
+  </div>
+</div>

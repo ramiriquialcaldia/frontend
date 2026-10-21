@@ -1,0 +1,191 @@
+.panel-container {
+  padding: 25px;
+  font-family: Arial, sans-serif;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+}
+
+.header-acciones {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-crear {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 9px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-crear:hover {
+  background-color: #0b5ed7;
+}
+
+.btn-salir {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 9px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-salir:hover {
+  background-color: #bb2d3b;
+}
+
+.seccion-tablas {
+  margin: 25px 0 15px 0;
+}
+
+.seccion-tablas select {
+  margin-left: 10px;
+  padding: 7px 12px;
+  font-size: 14px;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.tabla-datos {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-datos th,
+.tabla-datos td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.tabla-datos th {
+  background-color: #f2f2f2;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #1a365d;
+}
+
+.btn-cerrar-modal {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.campo {
+  margin-bottom: 15px;
+}
+
+.campo label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* Inputs y Select comparten las mismas medidas */
+.campo input,
+.campo select {
+  width: 100%;
+  padding: 9px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+.modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-cancelar {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-guardar {
+  background-color: #198754;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-guardar:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+}
+
+.alerta-exito {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.alerta-error {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #842029;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+}

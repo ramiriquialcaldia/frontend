@@ -1,0 +1,61 @@
+<div class="registro-container">
+  <div class="registro-card">
+    <h2>Primer Ingreso al Sistema</h2>
+    <p class="subtitulo">Por favor completa tus datos personales y asigna una contraseña definitiva.</p>
+
+    <form (ngSubmit)="guardarDatos()">
+      <div class="campo">
+        <label>Usuario Asignado:</label>
+        <input type="text" [value]="formulario.Usuario" disabled class="input-bloqueado" />
+      </div>
+
+      <div class="campo">
+        <label for="nombre">Nombre Completo:</label>
+        <input 
+          id="nombre" 
+          type="text" 
+          [(ngModel)]="formulario.NombreCompleto" 
+          name="nombre" 
+          placeholder="Ej: Pedro José Gómez Morales" 
+          required 
+        />
+      </div>
+
+      <div class="campo">
+        <label for="correo">Correo Institucional:</label>
+        <input 
+          id="correo" 
+          type="email" 
+          [(ngModel)]="formulario.CorreoInstitucional" 
+          name="correo" 
+          placeholder="ejemplo@ramiriqui-boyaca.gov.co" 
+          required 
+        />
+      </div>
+
+      <div class="campo">
+        <label for="clave">Nueva Contraseña:</label>
+        <input 
+          id="clave" 
+          type="password" 
+          [(ngModel)]="formulario.NuevaContrasena" 
+          name="clave" 
+          placeholder="Asigna tu nueva contraseña segura" 
+          required 
+        />
+      </div>
+
+      <button type="submit" [disabled]="cargando">
+        {{ cargando ? 'Guardando información...' : 'Completar Registro' }}
+      </button>
+
+      <div *ngIf="mensajeExito" class="alerta-exito">
+        {{ mensajeExito }}
+      </div>
+
+      <div *ngIf="mensajeError" class="alerta-error">
+        {{ mensajeError }}
+      </div>
+    </form>
+  </div>
+</div>

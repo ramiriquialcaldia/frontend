@@ -1,0 +1,112 @@
+<div class="panel-container" *ngIf="datosPanel">
+  <!-- Cabecera -->
+  <header class="panel-header">
+    <div>
+      <h2>Alcaldía de Ramiriquí - Panel de Control</h2>
+      <p><strong>Usuario:</strong> {{ sesion?.usuario }} | <strong>Rol:</strong> {{ sesion?.rol }}</p>
+    </div>
+    <div class="header-acciones">
+      <!-- Botón visible únicamente para Administrador o Supervisor -->
+      <button *ngIf="esAdminOSupervisor" class="btn-crear" (click)="abrirModal()">
+        + Crear Nuevo Usuario
+      </button>
+
+      <button class="btn-salir" (click)="salir()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <!-- Selector dinámico de tablas -->
+  <section class="seccion-tablas">
+    <label><strong>Selecciona una tabla:</strong></label>
+    <select (change)="seleccionarTabla($event)">
+      <option value="" disabled selected>-- Elige una tabla autorizada --</option>
+      <option *ngFor="let tabla of obtenerNombresTablas()" [value]="tabla">
+        {{ tabla }}
+      </option>
+    </select>
+  </section>
+
+  <!-- Visualización de registros de la tabla -->
+  <section *ngIf="tablaSeleccionada">
+    <h3>{{ tablaSeleccionada }} ({{ datosPanel.tablas[tablaSeleccionada]?.length || 0 }} registros)</h3>
+    <div class="tabla-scroll" *ngIf="datosPanel.tablas[tablaSeleccionada]?.length > 0; else sinDatos">
+      <table class="tabla-datos">
+        <thead>
+          <tr>
+            <th *ngFor="let col of columnasTabla">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fila of datosPanel.tablas[tablaSeleccionada]">
+            <td *ngFor="let col of columnasTabla">{{ fila[col] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #sinDatos>
+      <p>No hay registros disponibles en esta tabla.</p>
+    </ng-template>
+  </section>
+
+  <!-- Modal para pre-crear usuario con los 3 campos -->
+  <div class="modal-overlay" *ngIf="mostrarModalCrear">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Pre-crear Nuevo Usuario</h3>
+        <button class="btn-cerrar-modal" (click)="cerrarModal()">✕</button>
+      </div>
+
+      <form (ngSubmit)="guardarNuevoUsuario()">
+        <!-- Campo 1: Nombre de Usuario -->
+        <div class="campo">
+          <label for="nuevo_usuario">Nombre de Usuario:</label>
+          <input 
+            id="nuevo_usuario" 
+            type="text" 
+            [(ngModel)]="nuevoUsuario.Usuario" 
+            name="nuevo_usuario" 
+            placeholder="Ej: contratista_juan" 
+            required 
+          />
+        </div>
+
+        <!-- Campo 2: Contraseña Temporal -->
+        <div class="campo">
+          <label for="nueva_clave">Contraseña Temporal:</label>
+          <input 
+            id="nueva_clave" 
+            type="password" 
+            [(ngModel)]="nuevoUsuario.Contrasena" 
+            name="nueva_clave" 
+            placeholder="Ej: 12345" 
+            required 
+          />
+        </div>
+
+        <!-- Campo 3: Rol (CONTRATISTA o SUPERVISOR) -->
+        <div class="campo">
+          <label for="nuevo_rol">Rol asignado:</label>
+          <select 
+            id="nuevo_rol" 
+            [(ngModel)]="nuevoUsuario.PermisosRol" 
+            name="nuevo_rol" 
+            required
+          >
+            <option value="CONTRATISTA">CONTRATISTA</option>
+            <option value="SUPERVISOR">SUPERVISOR</option>
+          </select>
+        </div>
+
+        <div class="modal-botones">
+          <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn-guardar" [disabled]="cargandoCreacion">
+            {{ cargandoCreacion ? 'Creando...' : 'Crear Usuario' }}
+          </button>
+        </div>
+
+        <div *ngIf="mensajeCreacion" class="alerta-exito">{{ mensajeCreacion }}</div>
+        <div *ngIf="errorCreacion" class="alerta-error">{{ errorCreacion }}</div>
+      </form>
+    </div>
+  </div>
+</div>
