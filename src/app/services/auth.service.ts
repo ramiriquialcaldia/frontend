@@ -22,6 +22,8 @@ export class AuthService {
   private urlPanel = 'http://127.0.0.1:8000/consultas/panel';
   private urlCompletar = 'http://127.0.0.1:8000/usuarios/completar-registro';
   private urlPreCrear = 'http://127.0.0.1:8000/usuarios/pre-crear';
+  private urlPersonas = 'http://127.0.0.1:8000/personas';
+  private urlAutorizaciones = 'http://127.0.0.1:8000/autorizaciones';
 
   // Variable en memoria donde queda almacenada la sesión
   public sesionActual: SesionUsuario | null = null;
@@ -34,10 +36,13 @@ export class AuthService {
     }
   }
 
-  // Agrega este método dentro de la clase AuthService:
-  // preCrearUsuario(datos: { Usuario: string; Contrasena: string }): Observable<any> {
-  //   return this.http.post('http://127.0.0.1:8000/usuarios/pre-crear', datos);
-  // }
+  crearPersona(datosPersona: any): Observable<any> {
+    return this.http.post(this.urlPersonas, datosPersona);
+  }
+  crearAutorizacion(datosAutorizacion: any): Observable<any> {
+  return this.http.post(this.urlAutorizaciones, datosAutorizacion);
+}
+
   // En AuthService:
     preCrearUsuario(datos: { Usuario: string; Contrasena: string; PermisosRol: string }): Observable<any> {
       return this.http.post(this.urlPreCrear, datos);
@@ -63,6 +68,7 @@ export class AuthService {
     NombreCompleto: string;
     CorreoInstitucional: string;
     NuevaContrasena: string;
+    Profesion?: string;
   }): Observable<any> {
     // Si en FastAPI lo dejaste con @router.put, usa this.http.put; si le pusiste @router.post, usa this.http.post
     return this.http.put(this.urlCompletar, datos);
@@ -71,47 +77,11 @@ export class AuthService {
   /**
    * 3. Función que toma el JSON guardado y lo envía al endpoint del panel
    */
-  // obtenerDatosPanel(datosSesion?: SesionUsuario): Observable<any> {
-  //   // Usa los datos recibidos por parámetro o toma los de la variable almacenada
-  //   const sesionAEnviar = datosSesion || this.sesionActual;
 
-  //   if (!sesionAEnviar) {
-  //     throw new Error('No hay una sesión activa para consultar el panel.');
-  //   }
-
-  //   return this.http.post<any>(this.urlPanel, sesionAEnviar);
-  // }
-
-
-// obtenerDatosPanel(sesion?: any): Observable<any> {
-//   // 1. Obtener sesión de memoria o del almacenamiento local
-//   const sesionRecuperada = sesion || this.sesionActual || JSON.parse(localStorage.getItem('sesion_activa') || '{}');
-
-//   const usuario = sesionRecuperada.usuario || sesionRecuperada.Usuario || '';
-//   const rol = sesionRecuperada.rol || sesionRecuperada.PermisosRol || '';
-
-//   // 2. Armar el payload compatible con Pydantic
-//   const payload = {
-//     usuario: usuario,
-//     rol: rol,
-//     Usuario: usuario,
-//     PermisosRol: rol
-//   };
-
-//   return this.http.post(this.urlPanel, payload);
-// }
-
-
-
-obtenerDatosPanel(datosSesion?: SesionUsuario): Observable<any> {
+obtenerDatosPanel(datosSesion?: SesionUsuario | null): Observable<any> {
   const sesionRecuperada = datosSesion || this.sesionActual || JSON.parse(localStorage.getItem('sesion_activa') || '{}');
   return this.http.post<any>(this.urlPanel, sesionRecuperada);
 }
-
-
-
-
-
 
 
 

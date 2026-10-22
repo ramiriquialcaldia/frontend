@@ -35,6 +35,7 @@ export class CompletarRegistroComponent implements OnInit {
     Usuario: '',
     NombreCompleto: '',
     CorreoInstitucional: '',
+    Profesion: '',
     NuevaContrasena: ''
   };
 

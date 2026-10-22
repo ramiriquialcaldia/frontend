@@ -1,55 +1,184 @@
-<div class="panel-container" *ngIf="datosPanel">
-  <!-- Cabecera -->
-  <header class="panel-header">
-    <div>
-      <h2>Alcaldía de Ramiriquí - Panel de Control</h2>
-      <p><strong>Usuario:</strong> {{ sesion?.usuario }} | <strong>Rol:</strong> {{ sesion?.rol }}</p>
+<div class="panel-container">
+  <!-- Barra superior / Menú -->
+  <header class="navbar">
+    <div class="user-info">
+      <strong>Usuario:</strong> {{ sesion?.usuario }} | <strong>Rol:</strong> {{ sesion?.rol }}
     </div>
-    <div class="header-acciones">
-      <!-- Botón visible únicamente para Administrador o Supervisor -->
-      <button *ngIf="esAdminOSupervisor" class="btn-crear" (click)="abrirModal()">
-        + Crear Nuevo Usuario
-      </button>
 
-      <button class="btn-salir" (click)="salir()">Cerrar Sesión</button>
-    </div>
+<nav class="nav-links">
+  <button 
+    [class.active]="pestanaActiva === 'general'" 
+    (click)="pestanaActiva = 'general'">
+    Información General
+  </button>
+
+  <button 
+    *ngIf="puedeVerTrazabilidad" 
+    [class.active]="pestanaActiva === 'trazabilidad'" 
+    (click)="pestanaActiva = 'trazabilidad'">
+    Trazabilidad
+  </button>
+
+  <!-- BOTÓN VISIBLE SOLO PARA ADMIN Y SUPERVISOR -->
+  <button 
+    *ngIf="puedeRegistrarPersona" 
+    class="btn-success" 
+    (click)="abrirModalPersona()">
+    + Registrar Persona
+  </button>
+
+  <!-- BOTÓN VISIBLE SOLO PARA ADMIN -->
+  <button 
+    *ngIf="puedeCrearUsuarios" 
+    class="btn-primary" 
+    (click)="abrirModal()">
+    + Pre-crear Usuario
+  </button>
+
+  <button class="btn-danger" (click)="salir()">Cerrar Sesión</button>
+</nav>
   </header>
 
-  <!-- Selector dinámico de tablas -->
-  <section class="seccion-tablas">
-    <label><strong>Selecciona una tabla:</strong></label>
-    <select (change)="seleccionarTabla($event)">
-      <option value="" disabled selected>-- Elige una tabla autorizada --</option>
-      <option *ngFor="let tabla of obtenerNombresTablas()" [value]="tabla">
-        {{ tabla }}
-      </option>
-    </select>
+  <!-- ================= VISTA 1: TRAZABILIDAD ================= -->
+  <section *ngIf="pestanaActiva === 'trazabilidad'" class="contenido-tab">
+    <h2>Tabla de Trazabilidad y Auditoría</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Acción</th>
+          <th>Módulo / Tabla</th>
+          <th>Usuario</th>
+          <th>Fecha y Hora</th>
+          <th>Detalles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of datosPanel?.tablas['TRAZABILIDAD_AUDITORIA']">
+          <td>{{ item.Id }}</td>
+          <td>{{ item.Accion || item.TipoAccion }}</td>
+          <td>{{ item.TablaModificada || item.Modulo }}</td>
+          <td>{{ item.Usuario }}</td>
+          <td>{{ item.FechaHora || item.FechaRegistro }}</td>
+          <td>{{ item.Detalle || item.Descripcion }}</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
-  <!-- Visualización de registros de la tabla -->
-  <section *ngIf="tablaSeleccionada">
-    <h3>{{ tablaSeleccionada }} ({{ datosPanel.tablas[tablaSeleccionada]?.length || 0 }} registros)</h3>
-    <div class="tabla-scroll" *ngIf="datosPanel.tablas[tablaSeleccionada]?.length > 0; else sinDatos">
-      <table class="tabla-datos">
+  <!-- ================= VISTA 2: INFORMACIÓN GENERAL ================= -->
+  <section *ngIf="pestanaActiva === 'general'" class="contenido-tab">
+
+    <!-- CASO A: NO HAY PERSONA SELECCIONADA (Muestra la lista de personas) -->
+    <div *ngIf="!personaSeleccionada">
+      <h2>Listado de Adultos Mayores</h2>
+      <p class="instruccion">Haz clic en cualquier persona para abrir su expediente en 3 partes.</p>
+
+      <table class="data-table selectable">
         <thead>
           <tr>
-            <th *ngFor="let col of columnasTabla">{{ col }}</th>
+            <th>Documento</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Dirección</th>
+            <th>Estado</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let fila of datosPanel.tablas[tablaSeleccionada]">
-            <td *ngFor="let col of columnasTabla">{{ fila[col] }}</td>
+          <tr *ngFor="let p of datosPanel?.tablas['PERSONAS']" (click)="seleccionarPersona(p)">
+            <td>{{ p.NumeroDocumento || p.Cedula }}</td>
+            <td>{{ p.Nombres || p.PrimerNombre }}</td>
+            <td>{{ p.Apellidos || p.PrimerApellido }}</td>
+            <td>{{ p.DireccionResidencia || p.Direccion }}</td>
+            <td><span class="badge">{{ p.Estado || 'ACTIVO' }}</span></td>
+            <td><button class="btn-sm">Ver Expediente</button></td>
           </tr>
         </tbody>
       </table>
     </div>
-    <ng-template #sinDatos>
-      <p>No hay registros disponibles en esta tabla.</p>
-    </ng-template>
+
+    <!-- CASO B: PERSONA SELECCIONADA (VISTA EN 3 PARTES) -->
+    <div *ngIf="personaSeleccionada" class="expediente-persona">
+      <div class="encabezado-expediente">
+        <button class="btn-secondary" (click)="limpiarSeleccion()">← Volver al listado</button>
+        <h3>Expediente de: {{ personaSeleccionada.Nombres }} {{ personaSeleccionada.Apellidos }}</h3>
+      </div>
+
+      <div class="grid-tres-partes">
+
+        <!-- PARTE 1: DATOS DE LA PERSONA Y AUTORIZACIÓN MÉDICA DEBAJO -->
+        <div class="columna parte-1">
+          <div class="card">
+            <h4>1. Datos de la Persona</h4>
+            <p><strong>Documento:</strong> {{ personaSeleccionada.NumeroDocumento }}</p>
+            <p><strong>Nombres:</strong> {{ personaSeleccionada.Nombres }}</p>
+            <p><strong>Apellidos:</strong> {{ personaSeleccionada.Apellidos }}</p>
+            <p><strong>Dirección:</strong> {{ personaSeleccionada.DireccionResidencia }}</p>
+            <p><strong>Teléfono:</strong> {{ personaSeleccionada.Telefono }}</p>
+          </div>
+
+          <div class="card mt-2">
+            <h4>Autorización de Ficha Médica</h4>
+            <div *ngIf="autorizacionPersona; else sinAutorizacion">
+              <p><strong>Persona que Autorizó:</strong> {{ autorizacionPersona.NombreUsuarioAutoriza }}</p>
+              <p><strong>¿Se informó?:</strong> {{ autorizacionPersona.SeInformoAdultoMayor }}</p>
+              <p><strong>Manifestó autorización:</strong> {{ autorizacionPersona.ManifestoAutorizacion }}</p>
+              <p><strong>Soporte documental:</strong> {{ autorizacionPersona.ExisteSoporteDocumental }}</p>
+              <p><strong>Fecha Autorización:</strong> {{ autorizacionPersona.FechaAutorizacion }}</p>
+              <p><strong>Ubicación física:</strong> {{ autorizacionPersona.UbicacionDocumentoFisico }}</p>
+              <p><strong>Supervisor que verificó:</strong> {{ autorizacionPersona.SupervisorVerifico }}</p>
+              <p><strong>Fecha verificación:</strong> {{ autorizacionPersona.FechaHoraVerificacion }}</p>
+            </div>
+            <ng-template #sinAutorizacion>
+              <p class="alerta-vacio">No tiene autorización registrada para esta persona.</p>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- PARTE 2 (EN LA MITAD): VALORACIONES INSTITUCIONALES -->
+        <div class="columna parte-2">
+          <div class="card">
+            <h4>2. Valoraciones Institucionales</h4>
+            <div *ngIf="valoracionesPersona.length > 0; else sinValoraciones">
+              <div *ngFor="let val of valoracionesPersona" class="item-card">
+                <p><strong>Fecha:</strong> {{ val.FechaValoracion || val.Fecha }}</p>
+                <p><strong>Institución:</strong> {{ val.Institucion || val.NombreInstitucion }}</p>
+                <p><strong>Observación:</strong> {{ val.Observaciones || val.Diagnostico }}</p>
+                <hr>
+              </div>
+            </div>
+            <ng-template #sinValoraciones>
+              <p class="alerta-vacio">Sin valoraciones registradas para este usuario.</p>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- PARTE 3: INDICADORES IA -->
+        <div class="columna parte-3">
+          <div class="card">
+            <h4>3. Indicadores IA</h4>
+            <div *ngIf="indicadoresIAPersona.length > 0; else sinIA">
+              <div *ngFor="let ia of indicadoresIAPersona" class="item-card">
+                <p><strong>Nivel de Riesgo:</strong> {{ ia.NivelRiesgo || ia.Riesgo }}</p>
+                <p><strong>Predicción / Análisis:</strong> {{ ia.AnalisisIA || ia.Detalle }}</p>
+                <p><strong>Fecha de Cálculo:</strong> {{ ia.FechaCalculo }}</p>
+                <hr>
+              </div>
+            </div>
+            <ng-template #sinIA>
+              <p class="alerta-vacio">Sin cálculos de IA registrados para este usuario.</p>
+            </ng-template>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ================= MODAL PARA PRE-CREAR USUARIO ================= -->
+
   </section>
 
-  <!-- Modal para pre-crear usuario con los 3 campos -->
-  <div class="modal-overlay" *ngIf="mostrarModalCrear">
+    <div class="modal-overlay" *ngIf="mostrarModalCrear">
     <div class="modal-card">
       <div class="modal-header">
         <h3>Pre-crear Nuevo Usuario</h3>
@@ -57,7 +186,6 @@
       </div>
 
       <form (ngSubmit)="guardarNuevoUsuario()">
-        <!-- Campo 1: Nombre de Usuario -->
         <div class="campo">
           <label for="nuevo_usuario">Nombre de Usuario:</label>
           <input 
@@ -70,7 +198,6 @@
           />
         </div>
 
-        <!-- Campo 2: Contraseña Temporal -->
         <div class="campo">
           <label for="nueva_clave">Contraseña Temporal:</label>
           <input 
@@ -83,7 +210,6 @@
           />
         </div>
 
-        <!-- Campo 3: Rol (CONTRATISTA o SUPERVISOR) -->
         <div class="campo">
           <label for="nuevo_rol">Rol asignado:</label>
           <select 
@@ -109,4 +235,306 @@
       </form>
     </div>
   </div>
+
+
+
+
+<!-- ================= MODAL REGISTRAR PERSONA (COMPLETO) ================= -->
+<div class="modal-overlay" *ngIf="mostrarModalPersona">
+  <div class="modal-card modal-lg">
+    <div class="modal-header">
+      <h3>Registrar Nuevo Adulto Mayor (Expediente Completo)</h3>
+      <button class="btn-cerrar-modal" (click)="cerrarModalPersona()">✕</button>
+    </div>
+
+    <form (ngSubmit)="guardarPersona()">
+      
+      <!-- SECCIÓN 1: IDENTIFICACIÓN Y DATOS BÁSICOS -->
+      <h4 class="seccion-titulo">1. Identificación y Datos Personales</h4>
+      <div class="form-grid">
+        <!-- En la SECCIÓN 1: Identificación y Datos Personales -->
+        <div class="campo">
+          <label>Nombres: *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="nuevaPersona.Nombres" 
+            (ngModelChange)="actualizarNombreAutoriza()" 
+            name="p_nombres" 
+            required 
+            placeholder="Ej: Pedro José" 
+          />
+        </div>
+
+        <div class="campo">
+          <label>Apellidos: *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="nuevaPersona.Apellidos" 
+            (ngModelChange)="actualizarNombreAutoriza()" 
+            name="p_apellidos" 
+            required 
+            placeholder="Ej: Gómez Pérez" 
+          />
+        </div>
+
+        <div class="campo">
+          <label>Tipo de Documento:</label>
+          <select [(ngModel)]="nuevaPersona.TipoDocumento" name="p_tipo_doc">
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="TI">Tarjeta de Identidad (TI)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="PASAPORTE">Pasaporte</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Número de Documento: *</label>
+          <input type="text" [(ngModel)]="nuevaPersona.NumeroDocumento" name="p_num_doc" required placeholder="Ej: 1049..." />
+        </div>
+
+        <div class="campo">
+          <label>Fecha de Nacimiento:</label>
+          <input type="date" [(ngModel)]="nuevaPersona.FechaNacimiento" name="p_fecha_nac" />
+        </div>
+
+        <div class="campo">
+          <label>Sexo:</label>
+          <select [(ngModel)]="nuevaPersona.Sexo" name="p_sexo">
+            <option value="MASCULINO">MASCULINO</option>
+            <option value="FEMENINO">FEMENINO</option>
+            <option value="OTRO">OTRO</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>URL / Foto (Opcional):</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Foto" name="p_foto" placeholder="https://..." />
+        </div>
+
+        <div class="campo">
+          <label>Estado del Registro:</label>
+          <select [(ngModel)]="nuevaPersona.Estado" name="p_estado">
+            <option value="ACTIVO">ACTIVO</option>
+            <option value="INACTIVO">INACTIVO</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: CARACTERIZACIÓN SOCIAL Y DEMOGRÁFICA -->
+      <h4 class="seccion-titulo">2. Caracterización Social y Familiar</h4>
+      <div class="form-grid">
+        <div class="campo">
+          <label>Grupo Étnico:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.PerteneceGrupoEtnico" name="p_etnico" placeholder="Ej: Indígena, Afro, Ninguno" />
+        </div>
+
+        <div class="campo">
+          <label>Religión:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Religion" name="p_religion" placeholder="Ej: Católica, Cristiana, Ninguna" />
+        </div>
+
+        <div class="campo">
+          <label>¿Víctima del Conflicto?:</label>
+          <select [(ngModel)]="nuevaPersona.VictimaConflicto" name="p_conflicto">
+            <option value="NO">NO</option>
+            <option value="SÍ">SÍ</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Nivel de Estudio:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Estudio" name="p_estudio" placeholder="Ej: Primaria, Secundaria, Ninguno" />
+        </div>
+
+        <div class="campo">
+          <label>¿Con quién vive?:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.ConQuienVive" name="p_con_quien" placeholder="Ej: Solo, Con hijos, Cónyuge" />
+        </div>
+
+        <div class="campo">
+          <label>Hijos y cuántos responden:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.HijosYCuantosResponden" name="p_hijos" placeholder="Ej: 3 hijos, 1 responde económicamente" />
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: UBICACIÓN Y CONTACTO -->
+      <h4 class="seccion-titulo">3. Ubicación y Contacto</h4>
+      <div class="form-grid">
+        <div class="campo">
+          <label>Dirección de Residencia:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Direccion" name="p_dir" placeholder="Barrio o Vereda, Calle/Carrera" />
+        </div>
+
+        <div class="campo">
+          <label>Teléfono / Celular:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Telefono" name="p_tel" placeholder="Ej: 3124567890" />
+        </div>
+
+        <div class="campo">
+          <label>Nombre Contacto Emergencia:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.NombreEmergencia" name="p_nom_emg" placeholder="Ej: María Gómez (Hija)" />
+        </div>
+
+        <div class="campo">
+          <label>Teléfono Contacto Emergencia:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.NumeroEmergencia" name="p_num_emg" placeholder="Ej: 3109876543" />
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: SALUD Y CONDICIÓN FÍSICA -->
+      <h4 class="seccion-titulo">4. Información Médica y Antropométrica</h4>
+      <div class="form-grid">
+        <div class="campo">
+          <label>EPS:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.Eps" name="p_eps" placeholder="Ej: Nueva EPS, Famisanar, Sanitas" />
+        </div>
+
+        <div class="campo">
+          <label>Grupo Sanguíneo y Factor RH:</label>
+          <select [(ngModel)]="nuevaPersona.GrupoSanguineo" name="p_rh">
+            <option value="">Seleccione grupo...</option>
+            <option value="O+">O Positivo (O+)</option>
+            <option value="O-">O Negativo (O-)</option>
+            <option value="A+">A Positivo (A+)</option>
+            <option value="A-">A Negativo (A-)</option>
+            <option value="B+">B Positivo (B+)</option>
+            <option value="B-">B Negativo (B-)</option>
+            <option value="AB+">AB Positivo (AB+)</option>
+            <option value="AB-">AB Negativo (AB-)</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Condición de Discapacidad:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.CondicionDiscapacidad" name="p_discapacidad" placeholder="Ej: Ninguna, Visual, Motriz" />
+        </div>
+
+        <div class="campo">
+          <label>Peso (kg):</label>
+          <input type="number" step="0.1" [(ngModel)]="nuevaPersona.Peso" name="p_peso" placeholder="Ej: 65.5" />
+        </div>
+
+        <div class="campo">
+          <label>Altura (m / cm):</label>
+          <input type="number" step="0.01" [(ngModel)]="nuevaPersona.Altura" name="p_altura" placeholder="Ej: 1.62" />
+        </div>
+
+        <div class="campo span-2">
+          <label>Diagnóstico Principal:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.DiagnosticoPrincipal" name="p_diagnostico" placeholder="Ej: Hipertensión arterial y Diabetes tipo 2" />
+        </div>
+
+        <div class="campo span-2">
+          <label>Cirugías Realizadas:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.CirugiasRealizadas" name="p_cirugias" placeholder="Ej: Apendicectomía (2010), Cataratas (2018)" />
+        </div>
+
+        <div class="campo span-2">
+          <label>Medicamentos que consume:</label>
+          <input type="text" [(ngModel)]="nuevaPersona.MedicamentosConsume" name="p_medicamentos" placeholder="Ej: Losartán 50mg, Metformina 850mg" />
+        </div>
+
+        <div class="campo span-2">
+          <label>Observaciones Generales:</label>
+          <textarea [(ngModel)]="nuevaPersona.ObservacionGeneral" name="p_observaciones" rows="2" placeholder="Observaciones adicionales relevantes..."></textarea>
+        </div>
+      </div>
+
+
+
+
+
+
+<!-- SECCIÓN 5: AUTORIZACIÓN Y TRATAMIENTO DE DATOS -->
+      <h4 class="seccion-titulo">5. Autorización de Ficha Médica y Tratamiento de Datos</h4>
+      <div class="form-grid">
+        
+        <div class="campo">
+          <label>Persona que Autoriza (Nombres y Apellidos):</label>
+          <input 
+            type="text" 
+            [(ngModel)]="nuevaAutorizacion.NombreUsuarioAutoriza" 
+            name="aut_nombre" 
+            placeholder="Se autocompleta con el nombre del adulto mayor" 
+          />
+        </div>
+
+        <div class="campo">
+          <label>Fecha de la Autorización Física: *</label>
+          <input 
+            type="date" 
+            [(ngModel)]="nuevaAutorizacion.FechaAutorizacion" 
+            name="aut_fecha" 
+            required 
+          />
+        </div>
+
+        <div class="campo">
+          <label>¿Se informó al adulto mayor?:</label>
+          <select [(ngModel)]="nuevaAutorizacion.SeInformoAdultoMayor" name="aut_informo">
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>¿Manifestó su autorización?:</label>
+          <select [(ngModel)]="nuevaAutorizacion.ManifestoAutorizacion" name="aut_manifesto">
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="No consta">No consta</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>¿Existe soporte documental?:</label>
+          <select [(ngModel)]="nuevaAutorizacion.ExisteSoporteDocumental" name="aut_soporte">
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Supervisor que Verificó (Automático):</label>
+          <input 
+            type="text" 
+            [(ngModel)]="nuevaAutorizacion.SupervisorVerifico" 
+            name="aut_sup" 
+            readonly 
+            style="background-color: #f0f0f0;" 
+          />
+        </div>
+
+        <div class="campo span-2">
+          <label>Ubicación del Documento Físico: *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="nuevaAutorizacion.UbicacionDocumentoFisico" 
+            name="aut_ubicacion" 
+            required 
+            placeholder="Ej: Archivo Secretaría de Desarrollo Social, Carpeta 08" 
+          />
+        </div>
+
+      </div>
+
+
+
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="modal-botones">
+        <button type="button" class="btn-cancelar" (click)="cerrarModalPersona()">Cancelar</button>
+        <button type="submit" class="btn-guardar" [disabled]="cargandoPersona">
+          {{ cargandoPersona ? 'Registrando...' : 'Guardar Expediente Completo' }}
+        </button>
+      </div>
+
+      <div *ngIf="mensajePersona" class="alerta-exito">{{ mensajePersona }}</div>
+      <div *ngIf="errorPersona" class="alerta-error">{{ errorPersona }}</div>
+    </form>
+  </div>
+</div>
+
+
+  
 </div>
