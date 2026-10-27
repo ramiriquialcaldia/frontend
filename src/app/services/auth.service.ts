@@ -24,6 +24,7 @@ export class AuthService {
   private urlPreCrear = 'http://127.0.0.1:8000/usuarios/pre-crear';
   private urlPersonas = 'http://127.0.0.1:8000/personas';
   private urlAutorizaciones = 'http://127.0.0.1:8000/autorizaciones';
+  private urlValoracion = 'http://127.0.0.1:8000/valoracion';
 
   // Variable en memoria donde queda almacenada la sesión
   public sesionActual: SesionUsuario | null = null;
@@ -37,11 +38,15 @@ export class AuthService {
   }
 
   crearPersona(datosPersona: any): Observable<any> {
-    return this.http.post(this.urlPersonas, datosPersona);
+      return this.http.post(this.urlPersonas, datosPersona);
+    }
+    crearAutorizacion(datosAutorizacion: any): Observable<any> {
+    return this.http.post(this.urlAutorizaciones, datosAutorizacion);
   }
-  crearAutorizacion(datosAutorizacion: any): Observable<any> {
-  return this.http.post(this.urlAutorizaciones, datosAutorizacion);
-}
+  
+  crearValoracion(datos: any): Observable<any> {
+    return this.http.post(this.urlValoracion, datos);
+  }
 
   // En AuthService:
     preCrearUsuario(datos: { Usuario: string; Contrasena: string; PermisosRol: string }): Observable<any> {
@@ -83,6 +88,12 @@ obtenerDatosPanel(datosSesion?: SesionUsuario | null): Observable<any> {
   return this.http.post<any>(this.urlPanel, sesionRecuperada);
 }
 
+// Agrega este método dentro de la clase AuthService:
+actualizarEstadoPersona(personaId: number, nuevoEstado: string): Observable<any> {
+  return this.http.patch(`http://127.0.0.1:8000/personas/${personaId}/estado`, {
+    Estado: nuevoEstado
+  });
+}
 
 
   /**

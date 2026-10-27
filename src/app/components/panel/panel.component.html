@@ -71,8 +71,15 @@
 
     <!-- CASO A: NO HAY PERSONA SELECCIONADA (Muestra la lista de personas) -->
     <div *ngIf="!personaSeleccionada">
-      <h2>Listado de Adultos Mayores</h2>
-      <p class="instruccion">Haz clic en cualquier persona para abrir su expediente en 3 partes.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div>
+          <h2 style="margin: 0;">Listado de Adultos Mayores</h2>
+          <p class="instruccion" style="margin: 4px 0 0 0;">Usa los filtros en cada columna o haz clic en cualquier fila para abrir su expediente.</p>
+        </div>
+        <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 13px;" (click)="limpiarFiltros()">
+          Limpiar Filtros
+        </button>
+      </div>
 
       <table class="data-table selectable">
         <thead>
@@ -84,15 +91,85 @@
             <th>Estado</th>
             <th>Acción</th>
           </tr>
+
+          <!-- Fila 2: Inputs de búsqueda individual por columna -->
+          <tr class="fila-filtros" style="background-color: #f8f9fa;">
+            <th style="padding: 6px;">
+              <input 
+                type="text" 
+                [(ngModel)]="filtrosPersonas.documento" 
+                placeholder="Filtrar doc..." 
+                style="width: 100%; padding: 5px; font-size: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" 
+              />
+            </th>
+            <th style="padding: 6px;">
+              <input 
+                type="text" 
+                [(ngModel)]="filtrosPersonas.nombres" 
+                placeholder="Filtrar nombres..." 
+                style="width: 100%; padding: 5px; font-size: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" 
+              />
+            </th>
+            <th style="padding: 6px;">
+              <input 
+                type="text" 
+                [(ngModel)]="filtrosPersonas.apellidos" 
+                placeholder="Filtrar apellidos..." 
+                style="width: 100%; padding: 5px; font-size: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" 
+              />
+            </th>
+            <th style="padding: 6px;">
+              <input 
+                type="text" 
+                [(ngModel)]="filtrosPersonas.direccion" 
+                placeholder="Filtrar dirección..." 
+                style="width: 100%; padding: 5px; font-size: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" 
+              />
+            </th>
+            <th style="padding: 6px;">
+              <select 
+                [(ngModel)]="filtrosPersonas.estado" 
+                style="width: 100%; padding: 5px; font-size: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                <option value="">TODOS</option>
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+              </select>
+            </th>
+            <th style="text-align: center; font-size: 12px; color: #666;">
+              {{ obtenerPersonasFiltradasTabla().length }} filas
+            </th>
+          </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let p of datosPanel?.tablas['PERSONAS']" (click)="seleccionarPersona(p)">
+          <!-- Se itera sobre el método de filtrado -->
+          <tr *ngFor="let p of obtenerPersonasFiltradasTabla()" (click)="seleccionarPersona(p)">
             <td>{{ p.NumeroDocumento || p.Cedula }}</td>
-            <td>{{ p.Nombres || p.PrimerNombre }}</td>
-            <td>{{ p.Apellidos || p.PrimerApellido }}</td>
+            <td>{{ p.Nombres }}</td>
+            <td>{{ p.Apellidos }}</td>
             <td>{{ p.DireccionResidencia || p.Direccion }}</td>
-            <td><span class="badge">{{ p.Estado || 'ACTIVO' }}</span></td>
-            <td><button class="btn-sm">Ver Expediente</button></td>
+            
+            <!-- Botón de Estado interactivo con confirmación -->
+            <td>
+              <button 
+                type="button"
+                (click)="cambiarEstadoPersona(p, $event)"
+                [style.background-color]="(p.Estado || 'ACTIVO').toUpperCase() === 'ACTIVO' ? '#28a745' : '#dc3545'"
+                style="color: white; border: none; padding: 4px 10px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px;">
+                {{ p.Estado || 'ACTIVO' }}
+              </button>
+            </td>
+
+            <td>
+              <button class="btn-sm" type="button">Ver Expediente</button>
+            </td>
+          </tr>
+
+          <!-- Mensaje si ningún registro coincide -->
+          <tr *ngIf="obtenerPersonasFiltradasTabla().length === 0">
+            <td colspan="6" style="text-align: center; padding: 18px; color: #888;">
+              No se encontraron personas con los criterios de búsqueda ingresados.
+            </td>
           </tr>
         </tbody>
       </table>
@@ -109,50 +186,113 @@
 
         <!-- PARTE 1: DATOS DE LA PERSONA Y AUTORIZACIÓN MÉDICA DEBAJO -->
         <div class="columna parte-1">
+
+          <!-- TARJETA 1: TODOS LOS DATOS DE LA PERSONA -->
           <div class="card">
-            <h4>1. Datos de la Persona</h4>
-            <p><strong>Documento:</strong> {{ personaSeleccionada.NumeroDocumento }}</p>
-            <p><strong>Nombres:</strong> {{ personaSeleccionada.Nombres }}</p>
-            <p><strong>Apellidos:</strong> {{ personaSeleccionada.Apellidos }}</p>
-            <p><strong>Dirección:</strong> {{ personaSeleccionada.DireccionResidencia }}</p>
-            <p><strong>Teléfono:</strong> {{ personaSeleccionada.Telefono }}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 12px;">
+              <h4 style="margin: 0; color: #007bff;">1. Datos Completos de la Persona</h4>
+              <span class="badge" style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                {{ personaSeleccionada.Estado || 'ACTIVO' }}
+              </span>
+            </div>
+
+            <!-- Foto si existe -->
+            <div *ngIf="personaSeleccionada.Foto" style="text-align: center; margin-bottom: 12px;">
+              <img [src]="personaSeleccionada.Foto" alt="Foto Persona" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd;" />
+            </div>
+
+            <div class="datos-detalle-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+              <p><strong>ID Persona:</strong> {{ personaSeleccionada.Id }}</p>
+              <p><strong>Tipo Doc:</strong> {{ personaSeleccionada.TipoDocumento || 'CC' }}</p>
+              
+              <p><strong>Número Documento:</strong> {{ personaSeleccionada.NumeroDocumento || personaSeleccionada.Cedula }}</p>
+              <p><strong>Fecha Nacimiento:</strong> {{ personaSeleccionada.FechaNacimiento || 'No registrada' }}</p>
+
+              <p><strong>Nombres:</strong> {{ personaSeleccionada.Nombres }}</p>
+              <p><strong>Apellidos:</strong> {{ personaSeleccionada.Apellidos }}</p>
+
+              <p><strong>Sexo:</strong> {{ personaSeleccionada.Sexo || 'No registrado' }}</p>
+              <p><strong>Grupo Sanguíneo:</strong> {{ personaSeleccionada.GrupoSanguineo || 'No registrado' }}</p>
+
+              <p><strong>Peso:</strong> {{ personaSeleccionada.Peso ? (personaSeleccionada.Peso + ' kg') : 'N/A' }}</p>
+              <p><strong>Altura:</strong> {{ personaSeleccionada.Altura ? (personaSeleccionada.Altura + ' m') : 'N/A' }}</p>
+
+              <p><strong>Teléfono:</strong> {{ personaSeleccionada.Telefono || 'Sin teléfono' }}</p>
+              <p><strong>EPS:</strong> {{ personaSeleccionada.Eps || 'No registrada' }}</p>
+
+              <p style="grid-column: span 2;"><strong>Dirección:</strong> {{ personaSeleccionada.Direccion || personaSeleccionada.DireccionResidencia || 'No registrada' }}</p>
+              <p style="grid-column: span 2;"><strong>Nivel de Estudio:</strong> {{ personaSeleccionada.Estudio || 'No registrado' }}</p>
+              <p style="grid-column: span 2;"><strong>Con quién vive:</strong> {{ personaSeleccionada.ConQuienVive || 'No registrado' }}</p>
+              <p style="grid-column: span 2;"><strong>Discapacidad:</strong> {{ personaSeleccionada.CondicionDiscapacidad || 'No' }}</p>
+              <p style="grid-column: span 2;"><strong>Grupo Étnico:</strong> {{ personaSeleccionada.PerteneceGrupoEtnico || 'Ninguno' }}</p>
+              <p><strong>Religión:</strong> {{ personaSeleccionada.Religion || 'No registrada' }}</p>
+              <p><strong>Víctima de Conflicto:</strong> {{ personaSeleccionada.VictimaConflicto || 'No' }}</p>
+
+              <p style="grid-column: span 2;"><strong>Hijos / Quién responde:</strong> {{ personaSeleccionada.HijosYCuantosResponden || 'No registrado' }}</p>
+              <p style="grid-column: span 2;"><strong>Contacto Emergencia:</strong> {{ personaSeleccionada.NombreEmergencia || 'N/A' }} ({{ personaSeleccionada.NumeroEmergencia || 'N/A' }})</p>
+
+              <p style="grid-column: span 2;"><strong>Diagnóstico Principal:</strong> {{ personaSeleccionada.DiagnosticoPrincipal || 'Ninguno' }}</p>
+              <p style="grid-column: span 2;"><strong>Cirugías Realizadas:</strong> {{ personaSeleccionada.CirugiasRealizadas || 'Ninguna' }}</p>
+              <p style="grid-column: span 2;"><strong>Medicamentos que Consume:</strong> {{ personaSeleccionada.MedicamentosConsume || 'Ninguno' }}</p>
+              <p style="grid-column: span 2;"><strong>Observaciones Generales:</strong> {{ personaSeleccionada.ObservacionGeneral || 'Sin observaciones' }}</p>
+            </div>
           </div>
 
-          <div class="card mt-2">
-            <h4>Autorización de Ficha Médica</h4>
-            <div *ngIf="autorizacionPersona; else sinAutorizacion">
+          <!-- TARJETA 2: TODOS LOS DATOS DE LA AUTORIZACIÓN DE FICHA MÉDICA -->
+          <div *ngIf="!esSoloContratista" class="card mt-2" style="margin-top: 15px; border-top: 3px solid #28a745;">
+            <h4 style="color: #28a745; margin-bottom: 10px;">Autorización de Ficha Médica</h4>
+
+            <div *ngIf="autorizacionPersona; else sinAutorizacion" style="font-size: 13px; line-height: 1.6;">
               <p><strong>Persona que Autorizó:</strong> {{ autorizacionPersona.NombreUsuarioAutoriza }}</p>
               <p><strong>¿Se informó?:</strong> {{ autorizacionPersona.SeInformoAdultoMayor }}</p>
               <p><strong>Manifestó autorización:</strong> {{ autorizacionPersona.ManifestoAutorizacion }}</p>
               <p><strong>Soporte documental:</strong> {{ autorizacionPersona.ExisteSoporteDocumental }}</p>
               <p><strong>Fecha Autorización:</strong> {{ autorizacionPersona.FechaAutorizacion }}</p>
               <p><strong>Ubicación física:</strong> {{ autorizacionPersona.UbicacionDocumentoFisico }}</p>
-              <p><strong>Supervisor que verificó:</strong> {{ autorizacionPersona.SupervisorVerifico }}</p>
+              <p><strong>Supervisor verificó:</strong> {{ autorizacionPersona.SupervisorVerifico }}</p>
               <p><strong>Fecha verificación:</strong> {{ autorizacionPersona.FechaHoraVerificacion }}</p>
             </div>
+
+            <!-- Este mensaje solo le aparecerá a Admin y Supervisor si no hay registro -->
             <ng-template #sinAutorizacion>
-              <p class="alerta-vacio">No tiene autorización registrada para esta persona.</p>
+              <p class="alerta-vacio" style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 0;">
+                No tiene autorización registrada para esta persona.
+              </p>
             </ng-template>
           </div>
+
         </div>
 
-        <!-- PARTE 2 (EN LA MITAD): VALORACIONES INSTITUCIONALES -->
-        <div class="columna parte-2">
-          <div class="card">
-            <h4>2. Valoraciones Institucionales</h4>
-            <div *ngIf="valoracionesPersona.length > 0; else sinValoraciones">
-              <div *ngFor="let val of valoracionesPersona" class="item-card">
-                <p><strong>Fecha:</strong> {{ val.FechaValoracion || val.Fecha }}</p>
-                <p><strong>Institución:</strong> {{ val.Institucion || val.NombreInstitucion }}</p>
-                <p><strong>Observación:</strong> {{ val.Observaciones || val.Diagnostico }}</p>
-                <hr>
-              </div>
-            </div>
-            <ng-template #sinValoraciones>
-              <p class="alerta-vacio">Sin valoraciones registradas para este usuario.</p>
-            </ng-template>
+        <!-- PARTE 2: VALORACIONES INSTITUCIONALES -->
+      <div class="columna parte-2">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="margin: 0;">2. Valoraciones Institucionales</h4>
+            
+            <!-- BOTÓN PARA EL CONTRATISTA -->
+            <button 
+              *ngIf="esSoloContratista" 
+              type="button" 
+              class="btn-info btn-sm" 
+              (click)="abrirModalValoracionDirecta()">
+              + Nueva Valoración
+            </button>
           </div>
+
+          <div *ngIf="valoracionesPersona && valoracionesPersona.length > 0; else sinValoraciones">
+            <div *ngFor="let val of valoracionesPersona" class="item-card">
+              <p><strong>Profesional:</strong> {{ val.NombreProfesional }}</p>
+              <p><strong>Profesión / Cargo:</strong> {{ val.Profesion || 'No especificada' }}</p>
+              <p><strong>Fecha:</strong> {{ val.FechaValoracion }}</p>
+              <p><strong>Valoración:</strong> {{ val.ValoracionDetalle }}</p>
+              <hr>
+            </div>
+          </div>
+          <ng-template #sinValoraciones>
+            <p class="alerta-vacio">Sin valoraciones registradas para este usuario.</p>
+          </ng-template>
         </div>
+      </div>
 
         <!-- PARTE 3: INDICADORES IA -->
         <div class="columna parte-3">
@@ -455,6 +595,7 @@
             type="text" 
             [(ngModel)]="nuevaAutorizacion.NombreUsuarioAutoriza" 
             name="aut_nombre" 
+            readonly
             placeholder="Se autocompleta con el nombre del adulto mayor" 
           />
         </div>
@@ -535,6 +676,63 @@
   </div>
 </div>
 
+<!-- ================= MODAL VALORACIÓN DIRECTA ================= -->
+<div class="modal-overlay" *ngIf="mostrarModalValoracion">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Nueva Valoración Institucional</h3>
+      <button class="btn-cerrar-modal" (click)="cerrarModalValoracion()">✕</button>
+    </div>
 
+    <form (ngSubmit)="guardarValoracion()">
+      
+      <!-- Persona bloqueada -->
+      <div class="campo">
+        <label>Adulto Mayor (Persona):</label>
+        <input 
+          type="text" 
+          [value]="nuevaValoracion.NombrePersona + ' (ID: ' + nuevaValoracion.PersonaId + ')'" 
+          readonly 
+          tabindex="-1"
+          style="background-color: #f1f3f5; cursor: not-allowed; font-weight: bold;" 
+        />
+      </div>
+
+      <!-- Profesional bloqueado -->
+      <div class="campo">
+        <label>Profesional Evaluador:</label>
+        <input 
+          type="text" 
+          [value]="nuevaValoracion.NombreProfesional" 
+          readonly 
+          tabindex="-1"
+          style="background-color: #f1f3f5; cursor: not-allowed;" 
+        />
+      </div>
+
+      <!-- Único campo editable -->
+      <div class="campo">
+        <label>Detalle de Valoración: *</label>
+        <textarea 
+          rows="5" 
+          [(ngModel)]="nuevaValoracion.ValoracionDetalle" 
+          name="val_detalle" 
+          required 
+          placeholder="Escriba aquí la valoración clínica o novedades del paciente...">
+        </textarea>
+      </div>
+
+      <div class="modal-botones">
+        <button type="button" class="btn-cancelar" (click)="cerrarModalValoracion()">Cancelar</button>
+        <button type="submit" class="btn-guardar" [disabled]="cargandoValoracion">
+          {{ cargandoValoracion ? 'Guardando...' : 'Guardar Valoración' }}
+        </button>
+      </div>
+
+      <div *ngIf="mensajeValoracion" class="alerta-exito">{{ mensajeValoracion }}</div>
+      <div *ngIf="errorValoracion" class="alerta-error">{{ errorValoracion }}</div>
+    </form>
+  </div>
+</div>
   
 </div>

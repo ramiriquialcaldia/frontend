@@ -12,6 +12,7 @@ import { AuthService, SesionUsuario } from '../../services/auth.service';
   styleUrls: ['./panel.component.css']
 })
 export class PanelComponent implements OnInit {
+  // Sesión y datos del backend
   sesion: SesionUsuario | null = null;
   datosPanel: any = null;
 
@@ -19,6 +20,9 @@ export class PanelComponent implements OnInit {
   esAdmin: boolean = false;
   puedeVerTrazabilidad: boolean = false;
   puedeCrearUsuarios: boolean = false;
+  puedeRegistrarPersona: boolean = false;
+  esSoloContratista: boolean = false;
+  puedeVerAutorizacion: boolean = false;
 
   // Control de vistas del menú
   pestanaActiva: 'general' | 'trazabilidad' = 'general';
@@ -29,22 +33,22 @@ export class PanelComponent implements OnInit {
   valoracionesPersona: any[] = [];
   indicadoresIAPersona: any[] = [];
 
-  // Modal para crear usuarios (Solo Admin)
+  // ==========================================
+  // MODAL 1: PRE-CREAR USUARIO (Solo Admin)
+  // ==========================================
   mostrarModalCrear: boolean = false;
   nuevoUsuario = { Usuario: '', Contrasena: '', PermisosRol: 'CONTRATISTA' };
   mensajeCreacion: string = '';
   errorCreacion: string = '';
-  cargandoCreacion: boolean = false;
-
+    cargandoCreacion: boolean = false;
+  
+  // ==========================================
+  // MODAL 2: REGISTRAR PERSONA (Admin / Supervisor)
+  // ==========================================
   mostrarModalPersona: boolean = false;
-cargandoPersona: boolean = false;
-mensajePersona: string = '';
-errorPersona: string = '';
-
-// 1. En la definición de variables de la clase PanelComponent:
-puedeRegistrarPersona: boolean = false;
-
-
+  cargandoPersona: boolean = false;
+  mensajePersona: string = '';
+  errorPersona: string = '';
 
   nuevaPersona: any = {
     Nombres: '',
@@ -76,18 +80,41 @@ puedeRegistrarPersona: boolean = false;
   };
 
   nuevaAutorizacion: any = {
-  NombreUsuarioAutoriza: '',
-  SeInformoAdultoMayor: 'Sí',
-  ManifestoAutorizacion: 'Sí',
-  ExisteSoporteDocumental: 'Sí',
-  FechaAutorizacion: new Date().toISOString().substring(0, 10), // Fecha de hoy (YYYY-MM-DD)
-  UbicacionDocumentoFisico: '',
-  SupervisorVerifico: ''
-};
+    NombreUsuarioAutoriza: '',
+    SeInformoAdultoMayor: 'Sí',
+    ManifestoAutorizacion: 'Sí',
+    ExisteSoporteDocumental: 'Sí',
+    FechaAutorizacion: new Date().toISOString().substring(0, 10),
+    UbicacionDocumentoFisico: '',
+    SupervisorVerifico: ''
+  };
 
+  // 1. Objeto para almacenar los valores de búsqueda por columna
+  filtrosPersonas = {
+    documento: '',
+    nombres: '',
+    apellidos: '',
+    direccion: '',
+    estado: ''
+  };
+
+  // ==========================================
+  // MODAL 3: NUEVA VALORACIÓN (Solo Contratista)
+  // ==========================================
+  mostrarModalValoracion: boolean = false;
+  cargandoValoracion: boolean = false;
+  mensajeValoracion: string = '';
+  errorValoracion: string = '';
+
+  nuevaValoracion = {
+    PersonaId: 0,
+    NombrePersona: '',       // Se muestra en el modal (bloqueado)
+    NombreProfesional: '',   // Usuario en sesión (bloqueado)
+    ValoracionDetalle: ''    // Campo editable donde escribe la valoración
+  };
   constructor(private authService: AuthService, private router: Router) {}
 
- ngOnInit(): void {
+  ngOnInit(): void {
   // 1. Recuperar la sesión
   this.sesion = this.authService.sesionActual || JSON.parse(localStorage.getItem('sesion_activa') || 'null');
 
@@ -98,18 +125,24 @@ puedeRegistrarPersona: boolean = false;
   }
   
   // 3. Obtener el rol en mayúsculas y sin espacios
-  const rol = (this.sesion.rol || '').trim().toUpperCase();
+  // const rol = (this.sesion.rol || '').trim().toUpperCase();
+  const rol = (this.sesion?.rol || '').trim().toUpperCase();
 
   // 4. Permisos de Trazabilidad: SUPERVISOR, CONTROL y ADMIN
-  this.puedeVerTrazabilidad = ['SUPERVISOR', 'CONTROL', 'ADMIN', 'ADMINISTRADOR'].includes(rol);
+  this.puedeVerTrazabilidad = ['ADMIN', 'ADMINISTRADOR'].includes(rol);
 
-  // 5. Permiso de Crear Usuarios: ADMIN y SUPERVISOR (deja esta sola línea)
+    // 5. Permiso de Crear Usuarios: ADMIN y SUPERVISOR (deja esta sola línea)
   this.puedeCrearUsuarios = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
 
   // NUEVA REGLA: Registrar Persona (Solo Administrador y Supervisor, CONTRATISTA queda excluido)
   this.puedeRegistrarPersona = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
 
-  // 6. Consultar los datos del panel
+  // 7. Activa el botón de valoración para el contratista
+  this.esSoloContratista = rol === 'CONTRATISTA';
+
+  this.puedeVerAutorizacion = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
+
+  // 8. Consultar los datos del panel
   this.cargarDatos();
 }
 
@@ -132,8 +165,9 @@ puedeRegistrarPersona: boolean = false;
     const tablas = this.datosPanel?.tablas || {};
 
     // 1. Autorización de esta persona
-    const autorizaciones = tablas['AUTORIZACION_FICHAMEDICA'] || [];
-    this.autorizacionPersona = autorizaciones.find((a: any) => a.PersonaId === persona.Id) || null;
+    // 1. Autorización de esta persona (comparación con == para evitar errores de tipo)
+    const autorizaciones: any[] = tablas['AUTORIZACION_FICHAMEDICA'] || [];
+    this.autorizacionPersona = autorizaciones.find((a: any) => a.PersonaId == persona.Id) || null;
 
     // 2. Valoraciones institucionales de esta persona
     const valoraciones = tablas['VALORACIONES_INSTITUCIONALES'] || [];
@@ -230,27 +264,39 @@ cerrarModalPersona(): void {
   this.mostrarModalPersona = false;
 }
 
-// guardarPersona(): void {
-//   this.mensajePersona = '';
-//   this.errorPersona = '';
-//   this.cargandoPersona = true;
+// 2. Método que filtra en tiempo real la tabla de PERSONAS
+obtenerPersonasFiltradasTabla(): any[] {
+  const personas: any[] = this.datosPanel?.tablas?.['PERSONAS'] || [];
 
-//   this.authService.crearPersona(this.nuevaPersona).subscribe({
-//     next: (res) => {
-//       this.cargandoPersona = false;
-//       this.mensajePersona = '¡Persona registrada exitosamente!';
-//       // Refrescamos los datos del panel para que aparezca en la tabla de inmediato
-//       this.cargarDatos();
-//       setTimeout(() => {
-//         this.cerrarModalPersona();
-//       }, 1500);
-//     },
-//     error: (err) => {
-//       this.cargandoPersona = false;
-//       this.errorPersona = err.error?.detail || 'Error al registrar la persona.';
-//     }
-//   });
-// }
+  return personas.filter(p => {
+    // Normalizar valores a texto en minúsculas
+    const doc = (p.NumeroDocumento || p.Cedula || '').toString().toLowerCase();
+    const nom = (p.Nombres || '').toLowerCase();
+    const ape = (p.Apellidos || '').toLowerCase();
+    const dir = (p.DireccionResidencia || p.Direccion || '').toLowerCase();
+    const est = (p.Estado || 'ACTIVO').toLowerCase();
+
+    // Comprobar coincidencia con cada filtro
+    const coincideDoc = doc.includes(this.filtrosPersonas.documento.toLowerCase().trim());
+    const coincideNom = nom.includes(this.filtrosPersonas.nombres.toLowerCase().trim());
+    const coincideApe = ape.includes(this.filtrosPersonas.apellidos.toLowerCase().trim());
+    const coincideDir = dir.includes(this.filtrosPersonas.direccion.toLowerCase().trim());
+    const coincideEst = this.filtrosPersonas.estado === '' || est === this.filtrosPersonas.estado.toLowerCase().trim();
+
+    return coincideDoc && coincideNom && coincideApe && coincideDir && coincideEst;
+  });
+}
+
+// 3. Método opcional para limpiar todos los filtros de una vez
+limpiarFiltros(): void {
+  this.filtrosPersonas = {
+    documento: '',
+    nombres: '',
+    apellidos: '',
+    direccion: '',
+    estado: ''
+  };
+}
 
 guardarPersona(): void {
   this.mensajePersona = '';
@@ -299,6 +345,95 @@ guardarPersona(): void {
       // Concatena automáticamente "Nombres Apellidos"
       this.nuevaAutorizacion.NombreUsuarioAutoriza = `${nombres} ${apellidos}`.trim();
     }
+
+    // Abre el modal asignando los datos bloqueados de la persona seleccionada
+    abrirModalValoracionDirecta(): void {
+      if (!this.personaSeleccionada) return;
+
+      this.mensajeValoracion = '';
+      this.errorValoracion = '';
+
+      const nombres = this.personaSeleccionada.Nombres || '';
+      const apellidos = this.personaSeleccionada.Apellidos || '';
+
+      this.nuevaValoracion = {
+        PersonaId: this.personaSeleccionada.Id,
+        NombrePersona: `${nombres} ${apellidos}`.trim(),
+        NombreProfesional: this.sesion?.usuario || '',
+        ValoracionDetalle: ''
+      };
+
+      this.mostrarModalValoracion = true;
+    }
+
+    cerrarModalValoracion(): void {
+      this.mostrarModalValoracion = false;
+    }
+
+    // Envía la valoración a FastAPI
+    guardarValoracion(): void {
+      if (!this.nuevaValoracion.ValoracionDetalle.trim()) {
+        this.errorValoracion = 'Por favor ingrese el detalle de la valoración.';
+        return;
+      }
+
+      this.cargandoValoracion = true;
+      this.mensajeValoracion = '';
+      this.errorValoracion = '';
+
+      const payload = {
+        PersonaId: this.nuevaValoracion.PersonaId,
+        NombreProfesional: this.nuevaValoracion.NombreProfesional,
+        ValoracionDetalle: this.nuevaValoracion.ValoracionDetalle
+      };
+
+      this.authService.crearValoracion(payload).subscribe({
+        next: () => {
+          this.cargandoValoracion = false;
+          this.mensajeValoracion = '¡Valoración guardada exitosamente!';
+          this.cargarDatos(); // Refresca las listas para verla reflejada de inmediato
+          setTimeout(() => {
+            this.cerrarModalValoracion();
+          }, 1500);
+        },
+        error: (err) => {
+          this.cargandoValoracion = false;
+          this.errorValoracion = err.error?.detail || 'Error al guardar la valoración.';
+        }
+      });
+    }
+
+// ==========================================
+  // CAMBIAR ESTADO DE LA PERSONA (ACTIVO / INACTIVO)
+  // ==========================================
+  cambiarEstadoPersona(persona: any, event: MouseEvent): void {
+    // Evita que al hacer clic en el botón se seleccione la fila completa
+    event.stopPropagation();
+
+    const nombreCompleto = `${persona.Nombres || ''} ${persona.Apellidos || ''}`.trim();
+    const estadoActual = (persona.Estado || 'ACTIVO').toUpperCase();
+    const proximoEstado = estadoActual === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+
+    // Alerta de confirmación
+    const mensajeConfirmacion = `ESTA ACCIÓN DEJA A ${proximoEstado} A LA PERSONA SELECCIONADA (${nombreCompleto}). ¿ESTÁS SEGURO/A DE LA ACCIÓN QUE VAS A REALIZAR?`;
+
+    const confirmacion = window.confirm(mensajeConfirmacion);
+
+    if (confirmacion) {
+      this.authService.actualizarEstadoPersona(persona.Id, proximoEstado).subscribe({
+        next: () => {
+          // Actualiza el estado localmente para reflejar el cambio en la vista de inmediato
+          persona.Estado = proximoEstado;
+          if (this.personaSeleccionada && this.personaSeleccionada.Id === persona.Id) {
+            this.personaSeleccionada.Estado = proximoEstado;
+          }
+        },
+        error: (err: any) => {
+          alert(err.error?.detail || 'Ocurrió un error al intentar cambiar el estado de la persona.');
+        }
+      });
+    }
+  }
 
   salir(): void {
     this.authService.cerrarSesion();
