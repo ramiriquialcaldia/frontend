@@ -24,6 +24,9 @@ export class PanelComponent implements OnInit {
   esSoloContratista: boolean = false;
   puedeVerAutorizacion: boolean = false;
 
+  // 1. Declarar la variable de permiso en la clase:
+  puedeCambiarEstado: boolean = false;
+
   // Control de vistas del menú
   pestanaActiva: 'general' | 'trazabilidad' = 'general';
 
@@ -142,6 +145,9 @@ export class PanelComponent implements OnInit {
 
   this.puedeVerAutorizacion = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
 
+
+  this.puedeCambiarEstado = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
+
   // 8. Consultar los datos del panel
   this.cargarDatos();
 }
@@ -198,19 +204,32 @@ export class PanelComponent implements OnInit {
   }
 
   guardarNuevoUsuario(): void {
-    this.cargandoCreacion = true;
-    this.authService.preCrearUsuario(this.nuevoUsuario).subscribe({
-      next: (res) => {
-        this.cargandoCreacion = false;
-        this.mensajeCreacion = 'Usuario creado con éxito';
-        this.cargarDatos();
-      },
-      error: (err) => {
-        this.cargandoCreacion = false;
-        this.errorCreacion = err.error?.detail || 'Error al crear usuario';
-      }
-    });
-  }
+  this.mensajeCreacion = '';
+  this.errorCreacion = '';
+  this.cargandoCreacion = true;
+
+  const payload = {
+    ...this.nuevoUsuario,
+    AdminUsuarioId: this.sesion?.id_usuario || null // Envía el ID del administrador en sesión
+  };
+
+  this.authService.preCrearUsuario(payload).subscribe({
+    next: (res) => {
+      this.cargandoCreacion = false;
+      this.mensajeCreacion = res.mensaje || '¡Usuario pre-creado exitosamente!';
+      this.nuevoUsuario = {
+        Usuario: '',
+        Contrasena: '',
+        PermisosRol: 'CONTRATISTA'
+      };
+      this.cargarDatos(); // Refresca las tablas para ver el evento en trazabilidad
+    },
+    error: (err) => {
+      this.cargandoCreacion = false;
+      this.errorCreacion = err.error?.detail || 'Error al pre-crear el usuario.';
+    }
+  });
+}
 
   //crear usuario lo ase el supervisor
 abrirModalPersona(): void {
@@ -299,44 +318,49 @@ limpiarFiltros(): void {
 }
 
 guardarPersona(): void {
-  this.mensajePersona = '';
-  this.errorPersona = '';
-  this.cargandoPersona = true;
+    this.mensajePersona = '';
+    this.errorPersona = '';
+    this.cargandoPersona = true;
 
-  // Paso A: Guardar datos de la Persona
-  this.authService.crearPersona(this.nuevaPersona).subscribe({
-    next: (resPersona) => {
-      const nuevoIdPersona = resPersona.id_persona;
+    this.authService.crearPersona(this.nuevaPersona).subscribe({
+      next: (resPersona) => {
+        const nuevoIdPersona = resPersona.id_persona;
 
-      // Paso B: Asociar el nuevo ID y nombres si no se especificó otro
-      const payloadAutorizacion = {
-        ...this.nuevaAutorizacion,
-        PersonaId: nuevoIdPersona,
-        NombreUsuarioAutoriza: this.nuevaAutorizacion.NombreUsuarioAutoriza || `${this.nuevaPersona.Nombres} ${this.nuevaPersona.Apellidos}`.trim()
-      };
+        const payloadAutorizacion = {
+          ...this.nuevaAutorizacion,
+          PersonaId: nuevoIdPersona,
+          NombreUsuarioAutoriza: this.nuevaAutorizacion.NombreUsuarioAutoriza || `${this.nuevaPersona.Nombres} ${this.nuevaPersona.Apellidos}`.trim()
+        };
 
-      // Paso C: Guardar Autorización Médica vinculada
-      this.authService.crearAutorizacion(payloadAutorizacion).subscribe({
-        next: () => {
-          this.cargandoPersona = false;
-          this.mensajePersona = '¡Persona y Autorización registradas exitosamente!';
-          this.cargarDatos(); // Refresca las tablas del panel
-          setTimeout(() => {
-            this.cerrarModalPersona();
-          }, 1500);
-        },
-        error: (errAut) => {
-          this.cargandoPersona = false;
-          this.errorPersona = 'Se creó la persona, pero falló la autorización: ' + (errAut.error?.detail || errAut.message);
-        }
-      });
-    },
-    error: (errPer) => {
-      this.cargandoPersona = false;
-      this.errorPersona = errPer.error?.detail || 'Error al registrar los datos de la persona.';
-    }
-  });
-}
+        this.authService.crearAutorizacion(payloadAutorizacion).subscribe({
+          next: () => {
+            this.cargandoPersona = false;
+            this.mensajePersona = '¡Persona y Autorización registradas exitosamente!';
+
+            // >>> DISPARO DE AUDITORÍA CON GPS Y USUARIO <<<
+            this.authService.registrarAccionAuditoria(
+              `CREAR_PERSONA_ID_${nuevoIdPersona}`,
+              'PERSONAS',
+              `Doc: ${this.nuevaPersona.NumeroDocumento} | ${this.nuevaPersona.Nombres} ${this.nuevaPersona.Apellidos}`
+            );
+
+            this.cargarDatos();
+            setTimeout(() => {
+              this.cerrarModalPersona();
+            }, 1500);
+          },
+          error: (errAut) => {
+            this.cargandoPersona = false;
+            this.errorPersona = 'Se creó la persona, pero falló la autorización: ' + (errAut.error?.detail || errAut.message);
+          }
+        });
+      },
+      error: (errPer) => {
+        this.cargandoPersona = false;
+        this.errorPersona = errPer.error?.detail || 'Error al registrar los datos de la persona.';
+      }
+    });
+  }
 
     actualizarNombreAutoriza(): void {
       const nombres = (this.nuevaPersona.Nombres || '').trim();
@@ -370,66 +394,85 @@ guardarPersona(): void {
       this.mostrarModalValoracion = false;
     }
 
-    // Envía la valoración a FastAPI
     guardarValoracion(): void {
-      if (!this.nuevaValoracion.ValoracionDetalle.trim()) {
-        this.errorValoracion = 'Por favor ingrese el detalle de la valoración.';
-        return;
-      }
-
-      this.cargandoValoracion = true;
-      this.mensajeValoracion = '';
-      this.errorValoracion = '';
-
-      const payload = {
-        PersonaId: this.nuevaValoracion.PersonaId,
-        NombreProfesional: this.nuevaValoracion.NombreProfesional,
-        ValoracionDetalle: this.nuevaValoracion.ValoracionDetalle
-      };
-
-      this.authService.crearValoracion(payload).subscribe({
-        next: () => {
-          this.cargandoValoracion = false;
-          this.mensajeValoracion = '¡Valoración guardada exitosamente!';
-          this.cargarDatos(); // Refresca las listas para verla reflejada de inmediato
-          setTimeout(() => {
-            this.cerrarModalValoracion();
-          }, 1500);
-        },
-        error: (err) => {
-          this.cargandoValoracion = false;
-          this.errorValoracion = err.error?.detail || 'Error al guardar la valoración.';
-        }
-      });
+    if (!this.nuevaValoracion.ValoracionDetalle.trim()) {
+      this.errorValoracion = 'Por favor ingrese el detalle de la valoración.';
+      return;
     }
+
+    this.cargandoValoracion = true;
+    this.mensajeValoracion = '';
+    this.errorValoracion = '';
+
+    const payload = {
+      PersonaId: this.nuevaValoracion.PersonaId,
+      NombreProfesional: this.nuevaValoracion.NombreProfesional,
+      ValoracionDetalle: this.nuevaValoracion.ValoracionDetalle
+    };
+
+    this.authService.crearValoracion(payload).subscribe({
+      next: (res: any) => {
+        this.cargandoValoracion = false;
+        this.mensajeValoracion = '¡Valoración guardada exitosamente!';
+
+        // >>> DISPARO DE AUDITORÍA CON GPS Y USUARIO <<<
+        this.authService.registrarAccionAuditoria(
+          `CREAR_VALORACION_ID_${res.id_valoracion || this.nuevaValoracion.PersonaId}`,
+          'VALORACIONES_INSTITUCIONALES',
+          `PersonaId: ${this.nuevaValoracion.PersonaId} | Paciente: ${this.nuevaValoracion.NombrePersona}`
+        );
+
+        this.cargarDatos();
+        setTimeout(() => {
+          this.cerrarModalValoracion();
+        }, 1500);
+      },
+      error: (err) => {
+        this.cargandoValoracion = false;
+        this.errorValoracion = err.error?.detail || 'Error al guardar la valoración.';
+      }
+    });
+  }
 
 // ==========================================
   // CAMBIAR ESTADO DE LA PERSONA (ACTIVO / INACTIVO)
   // ==========================================
-  cambiarEstadoPersona(persona: any, event: MouseEvent): void {
-    // Evita que al hacer clic en el botón se seleccione la fila completa
+cambiarEstadoPersona(persona: any, event: MouseEvent): void {
     event.stopPropagation();
+
+    if (!this.puedeCambiarEstado) {
+      alert('No tienes permisos para modificar el estado de los adultos mayores.');
+      return;
+    }
 
     const nombreCompleto = `${persona.Nombres || ''} ${persona.Apellidos || ''}`.trim();
     const estadoActual = (persona.Estado || 'ACTIVO').toUpperCase();
     const proximoEstado = estadoActual === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
-    // Alerta de confirmación
-    const mensajeConfirmacion = `ESTA ACCIÓN DEJA A ${proximoEstado} A LA PERSONA SELECCIONADA (${nombreCompleto}). ¿ESTÁS SEGURO/A DE LA ACCIÓN QUE VAS A REALIZAR?`;
+    const mensaje = `ESTA ACCIÓN DEJA A ${proximoEstado} A LA PERSONA SELECCIONADA (${nombreCompleto}). ¿ESTÁS SEGURO/A DE LA ACCIÓN QUE VAS A REALIZAR?`;
 
-    const confirmacion = window.confirm(mensajeConfirmacion);
-
-    if (confirmacion) {
-      this.authService.actualizarEstadoPersona(persona.Id, proximoEstado).subscribe({
+    if (window.confirm(mensaje)) {
+      // Enviar el ROL real ('SUPERVISOR' o 'ADMIN') para validar permisos en FastAPI
+      const rolActual = (this.sesion?.rol || '').trim().toUpperCase();
+      
+      this.authService.actualizarEstadoPersona(persona.Id, proximoEstado, rolActual).subscribe({
         next: () => {
-          // Actualiza el estado localmente para reflejar el cambio en la vista de inmediato
           persona.Estado = proximoEstado;
           if (this.personaSeleccionada && this.personaSeleccionada.Id === persona.Id) {
             this.personaSeleccionada.Estado = proximoEstado;
           }
+
+          // Registrar auditoría con GPS y el ID del usuario en sesión (superjuan)
+          this.authService.registrarAccionAuditoria(
+            `CAMBIO_ESTADO_${proximoEstado}_ID_${persona.Id}`,
+            'PERSONAS',
+            `Persona: ${nombreCompleto}`
+          );
+
+          this.cargarDatos();
         },
-        error: (err: any) => {
-          alert(err.error?.detail || 'Ocurrió un error al intentar cambiar el estado de la persona.');
+        error: (err) => {
+          alert(err.error?.detail || 'Error al actualizar el estado.');
         }
       });
     }

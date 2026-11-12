@@ -89,12 +89,51 @@ obtenerDatosPanel(datosSesion?: SesionUsuario | null): Observable<any> {
 }
 
 // Agrega este método dentro de la clase AuthService:
-actualizarEstadoPersona(personaId: number, nuevoEstado: string): Observable<any> {
+actualizarEstadoPersona(personaId: number, nuevoEstado: string, rolUsuario: string): Observable<any> {
   return this.http.patch(`http://127.0.0.1:8000/personas/${personaId}/estado`, {
-    Estado: nuevoEstado
+    Estado: nuevoEstado,
+    RolUsuario: rolUsuario
   });
 }
 
+// 1. Obtener coordenadas del navegador
+  obtenerCoordenadas(): Promise<string> {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            resolve(`${lat}, ${lng}`);
+          },
+          () => resolve('GPS No Autorizado')
+        );
+      } else {
+        resolve('GPS No Soportado');
+      }
+    });
+  }
+
+  // 2. Registrar evento en la tabla TRAZABILIDAD_AUDITORIA
+  async registrarAccionAuditoria(accion: string, tabla: string, detalleExtra?: string): Promise<void> {
+    const ubicacion = await this.obtenerCoordenadas();
+
+    // Priorizar el id_usuario numérico de la sesión para la columna int de SQL Server
+    const idUsuario = this.sesionActual?.id_usuario || null;
+
+    const payload = {
+      UsuarioId: idUsuario,
+      AccionRealizada: accion,
+      TablaAfectada: tabla,
+      UbicacionGeo: ubicacion,
+      Dispositivo: detalleExtra || (typeof navigator !== 'undefined' ? navigator.userAgent : 'Web')
+    };
+
+    this.http.post('http://127.0.0.1:8000/trazabilidad', payload).subscribe({
+      next: () => console.log(`🔒 Auditoría registrada: ${accion}`),
+      error: (err) => console.error('Error al registrar auditoría:', err)
+    });
+  }
 
   /**
    * 4. Limpiar sesión (Cerrar sesión)
@@ -103,4 +142,6 @@ actualizarEstadoPersona(personaId: number, nuevoEstado: string): Observable<any>
     this.sesionActual = null;
     localStorage.removeItem('sesion_activa');
   }
+
+
 }

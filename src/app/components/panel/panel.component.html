@@ -42,28 +42,37 @@
   <!-- ================= VISTA 1: TRAZABILIDAD ================= -->
   <section *ngIf="pestanaActiva === 'trazabilidad'" class="contenido-tab">
     <h2>Tabla de Trazabilidad y Auditoría</h2>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Acción</th>
-          <th>Módulo / Tabla</th>
-          <th>Usuario</th>
-          <th>Fecha y Hora</th>
-          <th>Detalles</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of datosPanel?.tablas['TRAZABILIDAD_AUDITORIA']">
-          <td>{{ item.Id }}</td>
-          <td>{{ item.Accion || item.TipoAccion }}</td>
-          <td>{{ item.TablaModificada || item.Modulo }}</td>
-          <td>{{ item.Usuario }}</td>
-          <td>{{ item.FechaHora || item.FechaRegistro }}</td>
-          <td>{{ item.Detalle || item.Descripcion }}</td>
-        </tr>
-      </tbody>
-    </table>
+    
+    <div class="tabla-scroll" *ngIf="datosPanel?.tablas?.['TRAZABILIDAD_AUDITORIA']?.length > 0; else sinAuditoria">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Acción Realizada</th>
+            <th>Tabla Afectada</th>
+            <th>Usuario</th>
+            <th>Fecha y Hora (Servidor)</th>
+            <th>IP Cliente</th>
+            <th>Dispositivo / Huella Servidor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of datosPanel?.tablas?.['TRAZABILIDAD_AUDITORIA']">
+            <td><strong>#{{ item.Id }}</strong></td>
+            <td><span class="badge">{{ item.AccionRealizada }}</span></td>
+            <td>{{ item.TablaAfectada }}</td>
+            <td><strong>{{ item.Usuario || 'Sistema' }}</strong></td>
+            <td>{{ item.FechaHoraServer }}</td>
+            <td>{{ item.DireccionIP }}</td>
+            <td><small>{{ item.Dispositivo }}</small></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #sinAuditoria>
+      <p class="alerta-vacio">No hay registros de auditoría disponibles.</p>
+    </ng-template>
   </section>
 
   <!-- ================= VISTA 2: INFORMACIÓN GENERAL ================= -->
@@ -149,15 +158,25 @@
             <td>{{ p.Apellidos }}</td>
             <td>{{ p.DireccionResidencia || p.Direccion }}</td>
             
-            <!-- Botón de Estado interactivo con confirmación -->
+            <!-- Columna Estado: Botón para Admin/Supervisor y Etiqueta fija para Contratista -->
             <td>
+              <!-- ADMIN O SUPERVISOR: Botón interactivo con alerta de confirmación -->
               <button 
+                *ngIf="puedeCambiarEstado"
                 type="button"
                 (click)="cambiarEstadoPersona(p, $event)"
                 [style.background-color]="(p.Estado || 'ACTIVO').toUpperCase() === 'ACTIVO' ? '#28a745' : '#dc3545'"
                 style="color: white; border: none; padding: 4px 10px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 12px;">
                 {{ p.Estado || 'ACTIVO' }}
               </button>
+
+              <!-- CONTRATISTA: Solo etiqueta fija (no se puede presionar) -->
+              <span 
+                *ngIf="!puedeCambiarEstado"
+                [style.background-color]="(p.Estado || 'ACTIVO').toUpperCase() === 'ACTIVO' ? '#6c757d' : '#dc3545'"
+                style="color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 12px; display: inline-block;">
+                {{ p.Estado || 'ACTIVO' }}
+              </span>
             </td>
 
             <td>
@@ -165,7 +184,7 @@
             </td>
           </tr>
 
-          <!-- Mensaje si ningún registro coincide -->
+          <!-- Mensaje si ningún registro coincide con los filtros -->
           <tr *ngIf="obtenerPersonasFiltradasTabla().length === 0">
             <td colspan="6" style="text-align: center; padding: 18px; color: #888;">
               No se encontraron personas con los criterios de búsqueda ingresados.
@@ -375,9 +394,6 @@
       </form>
     </div>
   </div>
-
-
-
 
 <!-- ================= MODAL REGISTRAR PERSONA (COMPLETO) ================= -->
 <div class="modal-overlay" *ngIf="mostrarModalPersona">
