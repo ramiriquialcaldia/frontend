@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, SesionUsuario } from '../../services/auth.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
 
 @Component({
   selector: 'app-panel',
@@ -12,6 +14,21 @@ import { AuthService, SesionUsuario } from '../../services/auth.service';
   styleUrls: ['./panel.component.css']
 })
 export class PanelComponent implements OnInit {
+
+  // Referencias para la cámara web del PC (#3)
+  @ViewChild('videoCamara') videoCamara!: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvasFoto') canvasFoto!: ElementRef<HTMLCanvasElement>;
+  camaraActiva: boolean = false;
+  streamCamara: MediaStream | null = null;
+  subiendoFoto: boolean = false;
+
+  // Variables para carga y visualización de PDF (#5)
+  subiendoPdf: boolean = false;
+  urlPdfVisor: SafeResourceUrl | null = null;
+  urlPdfTexto: string = '';
+
+  generandoIA: boolean = false;
+
   // Sesión y datos del backend
   sesion: SesionUsuario | null = null;
   datosPanel: any = null;
@@ -24,17 +41,22 @@ export class PanelComponent implements OnInit {
   esSoloContratista: boolean = false;
   puedeVerAutorizacion: boolean = false;
 
+
+
   // 1. Declarar la variable de permiso en la clase:
   puedeCambiarEstado: boolean = false;
 
   // Control de vistas del menú
-  pestanaActiva: 'general' | 'trazabilidad' = 'general';
+ pestanaActiva: 'general' | 'trazabilidad' | 'usuarios' = 'general';
+  listaUsuarios: any[] = [];
 
   // Persona seleccionada para la vista en 3 partes
   personaSeleccionada: any = null;
   autorizacionPersona: any = null;
   valoracionesPersona: any[] = [];
   indicadoresIAPersona: any[] = [];
+
+  documentosPersona: any[] = [];
 
   // ==========================================
   // MODAL 1: PRE-CREAR USUARIO (Solo Admin)
@@ -115,7 +137,12 @@ export class PanelComponent implements OnInit {
     NombreProfesional: '',   // Usuario en sesión (bloqueado)
     ValoracionDetalle: ''    // Campo editable donde escribe la valoración
   };
-  constructor(private authService: AuthService, private router: Router) {}
+
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
   // 1. Recuperar la sesión
@@ -148,6 +175,8 @@ export class PanelComponent implements OnInit {
 
   this.puedeCambiarEstado = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
 
+  this.puedeVerAutorizacion = ['ADMIN', 'ADMINISTRADOR', 'SUPERVISOR'].includes(rol);
+
   // 8. Consultar los datos del panel
   this.cargarDatos();
 }
@@ -156,6 +185,11 @@ export class PanelComponent implements OnInit {
     this.authService.obtenerDatosPanel(this.sesion).subscribe({
       next: (res) => {
         this.datosPanel = res;
+
+        // Si tienes una persona abierta en pantalla, actualiza sus listas en vivo
+        if (this.personaSeleccionada) {
+          this.seleccionarPersona(this.personaSeleccionada);
+        }
       },
       error: (err) => {
         console.error('Error al cargar datos del panel:', err);
@@ -167,6 +201,9 @@ export class PanelComponent implements OnInit {
   // Al hacer clic en una persona de la tabla general
   seleccionarPersona(persona: any): void {
     this.personaSeleccionada = persona;
+
+    this.urlPdfVisor = null;
+    this.cargarDocumentosDePersona(persona.Id);
 
     const tablas = this.datosPanel?.tablas || {};
 
@@ -477,6 +514,240 @@ cambiarEstadoPersona(persona: any, event: MouseEvent): void {
       });
     }
   }
+
+  // ==========================================
+  // #3 y #4: TOMAR O SUBIR FOTO Y GUARDAR URL
+  // ==========================================
+
+  // Opción A: Subir foto desde explorador de archivos
+  alSeleccionarFotoArchivo(event: any): void {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    this.subiendoFoto = true;
+    this.authService.subirFotoPersona(file, file.name).subscribe({
+      next: (res) => {
+        this.subiendoFoto = false;
+        // Guarda únicamente la dirección/URL en el modelo que va a SQL Server
+        this.nuevaPersona.Foto = res.url;
+      },
+      error: (err) => {
+        this.subiendoFoto = false;
+        this.errorPersona = err.error?.detail || 'Error al subir la fotografía.';
+      }
+    });
+  }
+
+  // Opción B: Encender cámara web del PC
+  async iniciarCamara(): Promise<void> {
+    try {
+      this.camaraActiva = true;
+      this.streamCamara = await navigator.mediaDevices.getUserMedia({ video: true });
+      setTimeout(() => {
+        if (this.videoCamara?.nativeElement) {
+          this.videoCamara.nativeElement.srcObject = this.streamCamara;
+        }
+      }, 100);
+    } catch (error) {
+      this.camaraActiva = false;
+      this.errorPersona = 'No se pudo acceder a la cámara del equipo. Verifica los permisos del navegador.';
+    }
+  }
+
+  // Capturar fotograma de la cámara y subirlo al servidor
+  capturarFotoCamara(): void {
+    if (!this.videoCamara || !this.canvasFoto) return;
+
+    const video = this.videoCamara.nativeElement;
+    const canvas = this.canvasFoto.nativeElement;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          this.subiendoFoto = true;
+          this.authService.subirFotoPersona(blob, 'captura_camara.jpg').subscribe({
+            next: (res) => {
+              this.subiendoFoto = false;
+              this.nuevaPersona.Foto = res.url; // Dirección guardada para la BD
+              this.detenerCamara();
+            },
+            error: (err) => {
+              this.subiendoFoto = false;
+              this.errorPersona = err.error?.detail || 'Error al guardar la captura.';
+            }
+          });
+        }
+      }, 'image/jpeg', 0.85);
+    }
+  }
+
+  detenerCamara(): void {
+    if (this.streamCamara) {
+      this.streamCamara.getTracks().forEach(track => track.stop());
+      this.streamCamara = null;
+    }
+    this.camaraActiva = false;
+  }
+
+  // ==========================================
+  // #5: AÑADIR PDF Y VISUALIZAR PDF
+  // ==========================================
+  cargarDocumentosDePersona(personaId: number): void {
+    this.authService.obtenerDocumentosPersona(personaId).subscribe({
+      next: (res) => {
+        this.documentosPersona = res.data || [];
+      },
+      error: (err) => console.error('Error al cargar documentos:', err)
+    });
+  }
+
+  alSeleccionarPdf(event: any): void {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    this.subiendoPdf = true;
+    this.authService.subirDocumentoPdf(file).subscribe({
+      next: (res) => {
+        this.urlPdfTexto = res.url;
+        this.urlPdfVisor = this.sanitizer.bypassSecurityTrustResourceUrl(res.url);
+
+        // Si estamos dentro del expediente de una persona, guardamos en DOCUMENTOS_PERSONAS
+        if (this.personaSeleccionada && this.personaSeleccionada.Id) {
+          const nombreCompleto = `${this.personaSeleccionada.Nombres || ''} ${this.personaSeleccionada.Apellidos || ''}`.trim();
+
+          this.authService.registrarDocumentoPersona({
+            PersonaId: this.personaSeleccionada.Id,
+            NombrePaciente: nombreCompleto,
+            NombreArchivo: file.name,
+            TipoDocumento: 'Soporte PDF',
+            UrlDocumento: res.url,
+            SubidoPor: this.sesion?.usuario || ''
+          }).subscribe({
+            next: () => {
+              this.subiendoPdf = false;
+              this.cargarDocumentosDePersona(this.personaSeleccionada.Id); // Refresca la galería de PDFs
+              this.cargarDatos(); // Refresca la tabla de trazabilidad
+              event.target.value = ''; // Limpia el selector de archivo
+            },
+            error: (err) => {
+              this.subiendoPdf = false;
+              alert(err.error?.detail || 'Error al registrar el PDF en la base de datos.');
+            }
+          });
+        } else {
+          // Si está en el modal de creación de persona nueva
+          this.nuevaAutorizacion.UbicacionDocumentoFisico = res.url;
+          this.subiendoPdf = false;
+        }
+      },
+      error: (err) => {
+        this.subiendoPdf = false;
+        alert(err.error?.detail || 'Error al subir el documento PDF.');
+      }
+    });
+  }
+
+  // Función para abrir cualquier URL de PDF guardada en la BD dentro del visor
+  verPdfEnVisor(url: string): void {
+    if (!url) return;
+    this.urlPdfTexto = url;
+    this.urlPdfVisor = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  exportarWordHojaVida(): void {
+    if (!this.personaSeleccionada) return;
+    const docNum = this.personaSeleccionada.NumeroDocumento || this.personaSeleccionada.Id;
+
+    this.authService.descargarHojaVidaWord(this.personaSeleccionada.Id).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Hoja_de_Vida_${docNum}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Error al generar el documento Word de la Hoja de Vida.')
+    });
+  }
+
+  exportarWordValoraciones(): void {
+    if (!this.personaSeleccionada) return;
+    const docNum = this.personaSeleccionada.NumeroDocumento || this.personaSeleccionada.Id;
+
+    this.authService.descargarValoracionesWord(this.personaSeleccionada.Id).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Valoraciones_${docNum}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Error al generar el reporte Word de Valoraciones.')
+    });
+  }
+
+ ejecutarAnalisisIA(): void {
+    if (!this.personaSeleccionada) return;
+    this.generandoIA = true;
+
+    this.authService.generarIndicadorIA(this.personaSeleccionada.Id).subscribe({
+      next: (res: any) => {
+        this.generandoIA = false;
+
+        // Pintar el resultado al instante en la tarjeta abierta
+        this.indicadoresIAPersona = [{
+          Id: res.id_indicador,
+          PersonaId: this.personaSeleccionada.Id,
+          NombrePersona: res.nombre_persona,
+          ResumenInformacion: res.resumen,
+          FechaGeneracion: new Date().toISOString()
+        }];
+
+        // Sincronizar también la tabla general en memoria
+        this.cargarDatos();
+      },
+      error: (err) => {
+        this.generandoIA = false;
+        alert(err.error?.detail || 'Error al actualizar el indicador.');
+      }
+    });
+  }
+
+  abrirGestionUsuarios(): void {
+    this.pestanaActiva = 'usuarios';
+    this.authService.listarUsuariosGestion().subscribe({
+      next: (res) => {
+        this.listaUsuarios = res.data || [];
+      },
+      error: (err) => console.error('Error al listar usuarios:', err)
+    });
+  }
+
+  alternarAccesoUsuario(usr: any): void {
+    const accion = usr.EstadoActivo ? 'QUITAR EL ACCESO (desactivar)' : 'REACTIVAR EL ACCESO';
+    const confirmar = window.confirm(
+      `¿Estás seguro de ${accion} al usuario "${usr.Usuario}" (${usr.PermisosRol})?`
+    );
+    if (!confirmar) return;
+
+    const nuevoEstado = !usr.EstadoActivo;
+    this.authService.cambiarEstadoUsuario(usr.Id, nuevoEstado).subscribe({
+      next: () => {
+        this.abrirGestionUsuarios(); // Actualiza la tabla de usuarios
+        this.cargarDatos();          // Refresca la tabla de Trazabilidad en memoria
+      },
+      error: (err) => {
+        alert(err.error?.detail || 'No se pudo cambiar el estado del usuario.');
+      }
+    });
+  }
+
 
   salir(): void {
     this.authService.cerrarSesion();

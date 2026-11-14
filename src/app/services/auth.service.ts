@@ -143,5 +143,70 @@ actualizarEstadoPersona(personaId: number, nuevoEstado: string, rolUsuario: stri
     localStorage.removeItem('sesion_activa');
   }
 
+  // Subir foto (desde cámara web o archivo) -> retorna la URL para guardar en BD
+  subirFotoPersona(archivo: File | Blob, nombreArchivo: string = 'foto.jpg'): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', archivo, nombreArchivo);
+    return this.http.post<{ url: string }>('http://127.0.0.1:8000/archivos/subir-foto', formData);
+  }
+
+  // Subir PDF o documento soporte -> retorna la URL para guardar en BD
+  subirDocumentoPdf(archivo: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', archivo);
+    return this.http.post<{ url: string }>('http://127.0.0.1:8000/archivos/subir-documento', formData);
+  }
+
+  actualizarDocumentoAutorizacion(personaId: number, urlPdf: string): Observable<any> {
+    return this.http.patch(
+      `http://127.0.0.1:8000/autorizaciones/persona/${personaId}/documento`,
+      { UbicacionDocumentoFisico: urlPdf }
+    );
+  }
+  
+// Registrar documento PDF en la tabla DOCUMENTOS_PERSONAS (con trazabilidad)
+  registrarDocumentoPersona(datos: {
+    PersonaId: number;
+    NombrePaciente: string;
+    NombreArchivo: string;
+    TipoDocumento?: string;
+    UrlDocumento: string;
+    SubidoPor?: string;
+  }): Observable<any> {
+    return this.http.post('http://127.0.0.1:8000/documentos', datos);
+  }
+
+  // Listar todos los documentos PDF de una persona
+  obtenerDocumentosPersona(personaId: number): Observable<any> {
+    return this.http.get(`http://127.0.0.1:8000/documentos/persona/${personaId}`);
+  }
+
+  descargarHojaVidaWord(personaId: number): Observable<Blob> {
+    return this.http.get(`http://127.0.0.1:8000/exportar/hoja-vida/${personaId}`, {
+      responseType: 'blob'
+    });
+  }
+
+  descargarValoracionesWord(personaId: number): Observable<Blob> {
+    return this.http.get(`http://127.0.0.1:8000/exportar/valoraciones/${personaId}`, {
+      responseType: 'blob'
+    });
+  }
+
+  generarIndicadorIA(personaId: number): Observable<any> {
+    return this.http.post(`http://127.0.0.1:8000/indicadores/generar/${personaId}`, {});
+  }
+  
+  listarUsuariosGestion(): Observable<any> {
+    return this.http.get('http://127.0.0.1:8000/usuarios/gestion');
+  }
+
+  cambiarEstadoUsuario(usuarioId: number, estadoActivo: boolean): Observable<any> {
+    return this.http.patch(`http://127.0.0.1:8000/usuarios/${usuarioId}/estado`, {
+      EstadoActivo: estadoActivo,
+      UsuarioResponsableId: this.sesionActual?.id_usuario || null
+    });
+  }
+
 
 }

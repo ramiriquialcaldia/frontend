@@ -18,6 +18,13 @@
     (click)="pestanaActiva = 'trazabilidad'">
     Trazabilidad
   </button>
+  
+  <button 
+    *ngIf="puedeCrearUsuarios" 
+    [class.active]="pestanaActiva === 'usuarios'" 
+    (click)="abrirGestionUsuarios()">
+    Gestionar Usuarios
+  </button>
 
   <!-- BOTÓN VISIBLE SOLO PARA ADMIN Y SUPERVISOR -->
   <button 
@@ -73,6 +80,63 @@
     <ng-template #sinAuditoria>
       <p class="alerta-vacio">No hay registros de auditoría disponibles.</p>
     </ng-template>
+  </section>
+
+  <!-- ================= VISTA: GESTIÓN DE USUARIOS (REVOCAR / ACTIVAR ACCESO) ================= -->
+  <section *ngIf="pestanaActiva === 'usuarios' && puedeCrearUsuarios" class="contenido-tab">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div>
+        <h2 style="margin: 0;">Gestión de Contratistas y Supervisores</h2>
+        <p class="instruccion" style="margin: 4px 0 0 0;">
+          Desactiva el acceso de profesionales retirados sin eliminar su historial de valoraciones de la base de datos.
+        </p>
+      </div>
+      <button class="btn-primary" (click)="abrirModal()">+ Pre-crear Usuario</button>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Nombre Completo</th>
+          <th>Profesión / Cargo</th>
+          <th>Rol</th>
+          <th>Estado Acceso</th>
+          <th>Revocado (Fecha / Por)</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of listaUsuarios">
+          <td><strong>#{{ u.Id }}</strong></td>
+          <td>{{ u.Usuario }}</td>
+          <td>{{ u.NombreCompleto }}</td>
+          <td>{{ u.Profesion || 'No especificada' }}</td>
+          <td><strong>{{ u.PermisosRol }}</strong></td>
+          <td>
+            <span [ngClass]="u.EstadoActivo ? 'badge-activo' : 'badge-inactivo'">
+              {{ u.EstadoActivo ? 'ACTIVO' : 'INACTIVO' }}
+            </span>
+          </td>
+          <td>
+            <small *ngIf="!u.EstadoActivo">
+              {{ u.FechaEliminacion || '' }} ({{ u.EliminadoPorUsuario || 'Admin' }})
+            </small>
+            <small *ngIf="u.EstadoActivo" style="color: #888;">—</small>
+          </td>
+          <td>
+            <button
+              *ngIf="u.PermisosRol !== 'ADMIN'"
+              type="button"
+              [ngClass]="u.EstadoActivo ? 'btn-danger btn-sm' : 'btn-success btn-sm'"
+              (click)="alternarAccesoUsuario(u)">
+              {{ u.EstadoActivo ? 'Quitar Acceso' : 'Reactivar Acceso' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <!-- ================= VISTA 2: INFORMACIÓN GENERAL ================= -->
@@ -204,98 +268,282 @@
       <div class="grid-tres-partes">
 
         <!-- PARTE 1: DATOS DE LA PERSONA Y AUTORIZACIÓN MÉDICA DEBAJO -->
-        <div class="columna parte-1">
+        <!-- PARTE 1: DATOS COMPLETOS DE LA PERSONA + AUTORIZACIÓN + TABLA DE ARCHIVOS PDF -->
+<div class="columna parte-1">
+  
 
-          <!-- TARJETA 1: TODOS LOS DATOS DE LA PERSONA -->
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-bottom: 12px;">
-              <h4 style="margin: 0; color: #007bff;">1. Datos Completos de la Persona</h4>
-              <span class="badge" style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                {{ personaSeleccionada.Estado || 'ACTIVO' }}
-              </span>
-            </div>
+  <!-- 1. TARJETA CON DATOS COMPLETOS EN CUADRÍCULA LIMPIA -->
+  <div class="card">
+    <!-- <div class="card-header-estado">
+      <h4>1. Datos Completos de la Persona</h4>
+      <span [ngClass]="(personaSeleccionada.Estado || 'ACTIVO').toUpperCase() === 'ACTIVO' ? 'badge-activo' : 'badge-inactivo'">
+        {{ (personaSeleccionada.Estado || 'ACTIVO').toUpperCase() }}
+      </span>
+    </div> -->
+    <div class="card-header-estado">
+      <h4>1. Datos Completos de la Persona</h4>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="btn-sm" (click)="exportarWordHojaVida()">
+          📥 Descargar Word
+        </button>
+        <span [ngClass]="(personaSeleccionada.Estado || 'ACTIVO').toUpperCase() === 'ACTIVO' ? 'badge-activo' : 'badge-inactivo'">
+          {{ (personaSeleccionada.Estado || 'ACTIVO').toUpperCase() }}
+        </span>
+      </div>
+    </div>
 
-            <!-- Foto si existe -->
-            <div *ngIf="personaSeleccionada.Foto" style="text-align: center; margin-bottom: 12px;">
-              <img [src]="personaSeleccionada.Foto" alt="Foto Persona" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd;" />
-            </div>
+    <!-- Fotografía del Adulto Mayor si existe -->
+    <div *ngIf="personaSeleccionada.Foto" style="text-align: center; margin: 10px 0 16px 0;">
+      <img [src]="personaSeleccionada.Foto" alt="Foto Adulto Mayor"
+           style="width: 115px; height: 115px; object-fit: cover; border-radius: 50%; border: 3px solid #0056b3; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" />
+    </div>
 
-            <div class="datos-detalle-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
-              <p><strong>ID Persona:</strong> {{ personaSeleccionada.Id }}</p>
-              <p><strong>Tipo Doc:</strong> {{ personaSeleccionada.TipoDocumento || 'CC' }}</p>
-              
-              <p><strong>Número Documento:</strong> {{ personaSeleccionada.NumeroDocumento || personaSeleccionada.Cedula }}</p>
-              <p><strong>Fecha Nacimiento:</strong> {{ personaSeleccionada.FechaNacimiento || 'No registrada' }}</p>
+    <div class="ficha-grid">
+      <div class="ficha-item">
+        <span class="ficha-label">Documento</span>
+        <span class="ficha-valor">{{ personaSeleccionada.TipoDocumento }} {{ personaSeleccionada.NumeroDocumento }}</span>
+      </div>
 
-              <p><strong>Nombres:</strong> {{ personaSeleccionada.Nombres }}</p>
-              <p><strong>Apellidos:</strong> {{ personaSeleccionada.Apellidos }}</p>
+      <div class="ficha-item">
+        <span class="ficha-label">Fecha de Nacimiento</span>
+        <span class="ficha-valor">{{ personaSeleccionada.FechaNacimiento || 'No registra' }}</span>
+      </div>
 
-              <p><strong>Sexo:</strong> {{ personaSeleccionada.Sexo || 'No registrado' }}</p>
-              <p><strong>Grupo Sanguíneo:</strong> {{ personaSeleccionada.GrupoSanguineo || 'No registrado' }}</p>
+      <div class="ficha-item">
+        <span class="ficha-label">Nombres</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Nombres }}</span>
+      </div>
 
-              <p><strong>Peso:</strong> {{ personaSeleccionada.Peso ? (personaSeleccionada.Peso + ' kg') : 'N/A' }}</p>
-              <p><strong>Altura:</strong> {{ personaSeleccionada.Altura ? (personaSeleccionada.Altura + ' m') : 'N/A' }}</p>
+      <div class="ficha-item">
+        <span class="ficha-label">Apellidos</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Apellidos }}</span>
+      </div>
 
-              <p><strong>Teléfono:</strong> {{ personaSeleccionada.Telefono || 'Sin teléfono' }}</p>
-              <p><strong>EPS:</strong> {{ personaSeleccionada.Eps || 'No registrada' }}</p>
+      <div class="ficha-item">
+        <span class="ficha-label">Sexo</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Sexo || 'No registra' }}</span>
+      </div>
 
-              <p style="grid-column: span 2;"><strong>Dirección:</strong> {{ personaSeleccionada.Direccion || personaSeleccionada.DireccionResidencia || 'No registrada' }}</p>
-              <p style="grid-column: span 2;"><strong>Nivel de Estudio:</strong> {{ personaSeleccionada.Estudio || 'No registrado' }}</p>
-              <p style="grid-column: span 2;"><strong>Con quién vive:</strong> {{ personaSeleccionada.ConQuienVive || 'No registrado' }}</p>
-              <p style="grid-column: span 2;"><strong>Discapacidad:</strong> {{ personaSeleccionada.CondicionDiscapacidad || 'No' }}</p>
-              <p style="grid-column: span 2;"><strong>Grupo Étnico:</strong> {{ personaSeleccionada.PerteneceGrupoEtnico || 'Ninguno' }}</p>
-              <p><strong>Religión:</strong> {{ personaSeleccionada.Religion || 'No registrada' }}</p>
-              <p><strong>Víctima de Conflicto:</strong> {{ personaSeleccionada.VictimaConflicto || 'No' }}</p>
+      <div class="ficha-item">
+        <span class="ficha-label">Teléfono</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Telefono || 'No registra' }}</span>
+      </div>
 
-              <p style="grid-column: span 2;"><strong>Hijos / Quién responde:</strong> {{ personaSeleccionada.HijosYCuantosResponden || 'No registrado' }}</p>
-              <p style="grid-column: span 2;"><strong>Contacto Emergencia:</strong> {{ personaSeleccionada.NombreEmergencia || 'N/A' }} ({{ personaSeleccionada.NumeroEmergencia || 'N/A' }})</p>
+      <div class="ficha-item">
+        <span class="ficha-label">EPS</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Eps || 'No registra' }}</span>
+      </div>
 
-              <p style="grid-column: span 2;"><strong>Diagnóstico Principal:</strong> {{ personaSeleccionada.DiagnosticoPrincipal || 'Ninguno' }}</p>
-              <p style="grid-column: span 2;"><strong>Cirugías Realizadas:</strong> {{ personaSeleccionada.CirugiasRealizadas || 'Ninguna' }}</p>
-              <p style="grid-column: span 2;"><strong>Medicamentos que Consume:</strong> {{ personaSeleccionada.MedicamentosConsume || 'Ninguno' }}</p>
-              <p style="grid-column: span 2;"><strong>Observaciones Generales:</strong> {{ personaSeleccionada.ObservacionGeneral || 'Sin observaciones' }}</p>
-            </div>
-          </div>
+      <div class="ficha-item">
+        <span class="ficha-label">Grupo Sanguíneo (RH)</span>
+        <span class="ficha-valor">{{ personaSeleccionada.GrupoSanguineo || 'No registra' }}</span>
+      </div>
 
-          <!-- TARJETA 2: TODOS LOS DATOS DE LA AUTORIZACIÓN DE FICHA MÉDICA -->
-          <div *ngIf="!esSoloContratista" class="card mt-2" style="margin-top: 15px; border-top: 3px solid #28a745;">
-            <h4 style="color: #28a745; margin-bottom: 10px;">Autorización de Ficha Médica</h4>
+      <div class="ficha-item">
+        <span class="ficha-label">Peso</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Peso || 'No registra' }}</span>
+      </div>
 
-            <div *ngIf="autorizacionPersona; else sinAutorizacion" style="font-size: 13px; line-height: 1.6;">
-              <p><strong>Persona que Autorizó:</strong> {{ autorizacionPersona.NombreUsuarioAutoriza }}</p>
-              <p><strong>¿Se informó?:</strong> {{ autorizacionPersona.SeInformoAdultoMayor }}</p>
-              <p><strong>Manifestó autorización:</strong> {{ autorizacionPersona.ManifestoAutorizacion }}</p>
-              <p><strong>Soporte documental:</strong> {{ autorizacionPersona.ExisteSoporteDocumental }}</p>
-              <p><strong>Fecha Autorización:</strong> {{ autorizacionPersona.FechaAutorizacion }}</p>
-              <p><strong>Ubicación física:</strong> {{ autorizacionPersona.UbicacionDocumentoFisico }}</p>
-              <p><strong>Supervisor verificó:</strong> {{ autorizacionPersona.SupervisorVerifico }}</p>
-              <p><strong>Fecha verificación:</strong> {{ autorizacionPersona.FechaHoraVerificacion }}</p>
-            </div>
+      <div class="ficha-item">
+        <span class="ficha-label">Altura</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Altura || 'No registra' }}</span>
+      </div>
 
-            <!-- Este mensaje solo le aparecerá a Admin y Supervisor si no hay registro -->
-            <ng-template #sinAutorizacion>
-              <p class="alerta-vacio" style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin: 0;">
-                No tiene autorización registrada para esta persona.
-              </p>
-            </ng-template>
-          </div>
+      <div class="ficha-item">
+        <span class="ficha-label">Condición Discapacidad</span>
+        <span class="ficha-valor">{{ personaSeleccionada.CondicionDiscapacidad || 'NO' }}</span>
+      </div>
 
-        </div>
+      <div class="ficha-item">
+        <span class="ficha-label">Grupo Étnico</span>
+        <span class="ficha-valor">{{ personaSeleccionada.PerteneceGrupoEtnico || 'NINGUNO' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Religión</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Religion || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Víctima del Conflicto</span>
+        <span class="ficha-valor">{{ personaSeleccionada.VictimaConflicto || 'NO' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Nivel de Estudio</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Estudio || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Con Quién Vive</span>
+        <span class="ficha-valor">{{ personaSeleccionada.ConQuienVive || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Dirección de Residencia</span>
+        <span class="ficha-valor">{{ personaSeleccionada.Direccion || personaSeleccionada.DireccionResidencia || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Hijos / Cuántos Responden</span>
+        <span class="ficha-valor">{{ personaSeleccionada.HijosYCuantosResponden || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Diagnóstico Principal</span>
+        <span class="ficha-valor">{{ personaSeleccionada.DiagnosticoPrincipal || 'Ninguno' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Cirugías Realizadas</span>
+        <span class="ficha-valor">{{ personaSeleccionada.CirugiasRealizadas || 'Ninguna' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Medicamentos que Consume</span>
+        <span class="ficha-valor">{{ personaSeleccionada.MedicamentosConsume || 'Ninguno' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Contacto Emergencia</span>
+        <span class="ficha-valor">{{ personaSeleccionada.NombreEmergencia || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Teléfono Emergencia</span>
+        <span class="ficha-valor">{{ personaSeleccionada.NumeroEmergencia || 'No registra' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Observación General</span>
+        <span class="ficha-valor">{{ personaSeleccionada.ObservacionGeneral || 'Sin observaciones' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TARJETA DE AUTORIZACIÓN DE FICHA MÉDICA (OCULTA PARA CONTRATISTA) -->
+  <div class="card mt-2" *ngIf="puedeVerAutorizacion">
+    <h4>Autorización de Ficha Médica</h4>
+
+    <div *ngIf="autorizacionPersona; else sinAutorizacion" class="ficha-grid">
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Persona que Autorizó</span>
+        <span class="ficha-valor">{{ autorizacionPersona.NombreUsuarioAutoriza }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">¿Se informó?</span>
+        <span class="ficha-valor">{{ autorizacionPersona.SeInformoAdultoMayor }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Manifestó autorización</span>
+        <span class="ficha-valor">{{ autorizacionPersona.ManifestoAutorizacion }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Soporte documental</span>
+        <span class="ficha-valor">{{ autorizacionPersona.ExisteSoporteDocumental }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Fecha Autorización</span>
+        <span class="ficha-valor">{{ autorizacionPersona.FechaAutorizacion }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Supervisor que verificó</span>
+        <span class="ficha-valor">{{ autorizacionPersona.SupervisorVerifico }}</span>
+      </div>
+
+      <div class="ficha-item">
+        <span class="ficha-label">Fecha verificación</span>
+        <span class="ficha-valor">{{ autorizacionPersona.FechaHoraVerificacion | date:'short' }}</span>
+      </div>
+
+      <div class="ficha-item span-2">
+        <span class="ficha-label">Ubicación física</span>
+        <span class="ficha-valor">{{ autorizacionPersona.UbicacionDocumentoFisico || 'No registra' }}</span>
+      </div>
+    </div>
+
+    <ng-template #sinAutorizacion>
+      <p class="alerta-vacio">No tiene autorización registrada para esta persona.</p>
+    </ng-template>
+  </div>
+
+  <!-- 3. TABLA DE ARCHIVOS Y SOPORTES PDF (DEBAJO DE AUTORIZACIÓN) -->
+  <div class="card mt-2">
+    <h4>Documentos y Soportes PDF ({{ documentosPersona.length }})</h4>
+
+    <!-- Selector para subir nuevos PDFs -->
+    <div style="margin-bottom: 12px;">
+      <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">
+        + Añadir nuevo documento PDF:
+      </label>
+      <input type="file" accept="application/pdf" (change)="alSeleccionarPdf($event)" [disabled]="subiendoPdf" />
+      <span *ngIf="subiendoPdf" style="font-size: 12px; color: #0056b3; display: block; margin-top: 4px;">
+        Subiendo archivo y registrando trazabilidad...
+      </span>
+    </div>
+
+    <!-- Tabla con todos los PDFs de la persona -->
+    <div *ngIf="documentosPersona.length > 0; else sinDocs" style="overflow-x: auto;">
+      <table class="data-table" style="width: 100%; font-size: 12px; border-collapse: collapse;">
+        <thead>
+          <tr style="background-color: #f1f3f5;">
+            <th style="padding: 6px; text-align: left;">Archivo</th>
+            <th style="padding: 6px; text-align: left;">Fecha</th>
+            <th style="padding: 6px; text-align: left;">Subido por</th>
+            <th style="padding: 6px; text-align: center;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of documentosPersona" style="border-bottom: 1px solid #dee2e6;">
+            <td style="padding: 6px;">📄 {{ doc.NombreArchivo || 'Documento.pdf' }}</td>
+            <td style="padding: 6px;">{{ doc.FechaSubida | date:'short' }}</td>
+            <td style="padding: 6px;">{{ doc.SubidoPor || 'Sistema' }}</td>
+            <td style="padding: 6px; text-align: center;">
+              <button type="button" class="btn-info btn-sm" (click)="verPdfEnVisor(doc.UrlDocumento)">
+                Ver PDF
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #sinDocs>
+      <p class="alerta-vacio">No hay documentos PDF adjuntos a este expediente.</p>
+    </ng-template>
+
+    <!-- Visor PDF integrado -->
+    <div *ngIf="urlPdfVisor" style="margin-top: 12px; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
+      <div style="background: #eee; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+        <strong>Vista previa del documento</strong>
+        <button type="button" (click)="urlPdfVisor = null" style="border: none; background: transparent; cursor: pointer; font-weight: bold;">
+          ✕ Cerrar visor
+        </button>
+      </div>
+      <iframe [src]="urlPdfVisor" width="100%" height="420px" style="border: none;"></iframe>
+    </div>
+  </div>
+
+</div>
 
         <!-- PARTE 2: VALORACIONES INSTITUCIONALES -->
       <div class="columna parte-2">
         <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 6px; flex-wrap: wrap;">
             <h4 style="margin: 0;">2. Valoraciones Institucionales</h4>
-            
-            <!-- BOTÓN PARA EL CONTRATISTA -->
-            <button 
-              *ngIf="esSoloContratista" 
-              type="button" 
-              class="btn-info btn-sm" 
-              (click)="abrirModalValoracionDirecta()">
-              + Nueva Valoración
-            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-sm" (click)="exportarWordValoraciones()">
+                📥 Descargar Word
+              </button>
+              <button *ngIf="esSoloContratista" type="button" class="btn-info btn-sm" (click)="abrirModalValoracionDirecta()">
+                + Nueva Valoración
+              </button>
+            </div>
           </div>
 
           <div *ngIf="valoracionesPersona && valoracionesPersona.length > 0; else sinValoraciones">
@@ -316,17 +564,25 @@
         <!-- PARTE 3: INDICADORES IA -->
         <div class="columna parte-3">
           <div class="card">
-            <h4>3. Indicadores IA</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+              <h4 style="margin: 0; border-bottom: none; padding-bottom: 0;">3. Indicadores IA</h4>
+              <button type="button" class="btn-primary btn-sm" (click)="ejecutarAnalisisIA()" [disabled]="generandoIA">
+                {{ generandoIA ? 'Actualizando...' : 'Actualizar' }}
+              </button>
+            </div>
+
             <div *ngIf="indicadoresIAPersona.length > 0; else sinIA">
               <div *ngFor="let ia of indicadoresIAPersona" class="item-card">
-                <p><strong>Nivel de Riesgo:</strong> {{ ia.NivelRiesgo || ia.Riesgo }}</p>
-                <p><strong>Predicción / Análisis:</strong> {{ ia.AnalisisIA || ia.Detalle }}</p>
-                <p><strong>Fecha de Cálculo:</strong> {{ ia.FechaCalculo }}</p>
-                <hr>
+                <p><strong>Paciente:</strong> {{ ia.NombrePersona }}</p>
+                <p><strong>Última actualización:</strong> {{ ia.FechaGeneracion | date:'short' }}</p>
+                <p style="white-space: pre-line; margin-top: 8px; line-height: 1.5;">{{ ia.ResumenInformacion }}</p>
               </div>
             </div>
+
             <ng-template #sinIA>
-              <p class="alerta-vacio">Sin cálculos de IA registrados para este usuario.</p>
+              <p class="alerta-vacio">
+                Sin indicador generado aún. Presiona <strong>Actualizar</strong> para consolidar el diagnóstico, las valoraciones y los documentos PDF.
+              </p>
             </ng-template>
           </div>
         </div>
@@ -462,9 +718,39 @@
           </select>
         </div>
 
-        <div class="campo">
-          <label>URL / Foto (Opcional):</label>
-          <input type="text" [(ngModel)]="nuevaPersona.Foto" name="p_foto" placeholder="https://..." />
+        <!-- CAMPO DE FOTO: CÁMARA WEB O ARCHIVO (#3 y #4) -->
+        <div class="campo span-2" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #dee2e6;">
+          <label style="font-weight: bold; display: block; margin-bottom: 8px;">Fotografía del Adulto Mayor:</label>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <!-- Opción A: Explorador de archivos -->
+            <input type="file" accept="image/*" (change)="alSeleccionarFotoArchivo($event)" />
+
+            <!-- Opción B: Cámara del PC -->
+            <button type="button" class="btn-info btn-sm" *ngIf="!camaraActiva" (click)="iniciarCamara()">
+              📷 Tomar Foto con Cámara
+            </button>
+            <button type="button" class="btn-danger btn-sm" *ngIf="camaraActiva" (click)="detenerCamara()">
+              Cerrar Cámara
+            </button>
+          </div>
+
+          <p *ngIf="subiendoFoto" style="color: #0056b3; font-size: 13px; margin-top: 6px;">Subiendo fotografía...</p>
+
+          <!-- Vista en vivo de la Cámara Web -->
+          <div *ngIf="camaraActiva" style="margin-top: 10px; text-align: center;">
+            <video #videoCamara autoplay playsinline style="width: 100%; max-width: 320px; border-radius: 6px; border: 1px solid #ccc;"></video>
+            <canvas #canvasFoto style="display: none;"></canvas>
+            <div style="margin-top: 8px;">
+              <button type="button" class="btn-success" (click)="capturarFotoCamara()">📸 Capturar Foto</button>
+            </div>
+          </div>
+
+          <!-- Previsualización de la Foto cargada -->
+          <div *ngIf="nuevaPersona.Foto && !camaraActiva" style="margin-top: 10px; display: flex; align-items: center; gap: 12px;">
+            <img [src]="nuevaPersona.Foto" alt="Foto previa" style="width: 75px; height: 75px; object-fit: cover; border-radius: 50%; border: 2px solid #28a745;" />
+            <span style="font-size: 12px; color: #28a745; font-weight: bold;">✓ Fotografía lista para guardar en BD</span>
+          </div>
         </div>
 
         <div class="campo">
