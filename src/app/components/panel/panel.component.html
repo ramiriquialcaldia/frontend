@@ -1,50 +1,61 @@
 <div class="panel-container">
   <!-- Barra superior / Menú -->
   <header class="navbar">
+  <div class="navbar-logo navbar-logo--izquierdo">
+    <img src="imagenes/vida.jpg" alt="Escudo Alcaldía de Ramiriquí" />
+  </div>
+
+  <div class="navbar-centro">
     <div class="user-info">
-      <strong>Usuario:</strong> {{ sesion?.usuario }} | <strong>Rol:</strong> {{ sesion?.rol }}
+      <span><strong>Usuario:</strong> {{ sesion?.usuario }}</span>
+      <span><strong>Rol:</strong> {{ sesion?.rol }}</span>
     </div>
 
-<nav class="nav-links">
-  <button 
-    [class.active]="pestanaActiva === 'general'" 
-    (click)="pestanaActiva = 'general'">
-    Información General
-  </button>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <button
+        [class.active]="pestanaActiva === 'general'"
+        (click)="pestanaActiva = 'general'">
+        Información General
+      </button>
 
-  <button 
-    *ngIf="puedeVerTrazabilidad" 
-    [class.active]="pestanaActiva === 'trazabilidad'" 
-    (click)="pestanaActiva = 'trazabilidad'">
-    Trazabilidad
-  </button>
-  
-  <button 
-    *ngIf="puedeCrearUsuarios" 
-    [class.active]="pestanaActiva === 'usuarios'" 
-    (click)="abrirGestionUsuarios()">
-    Gestionar Usuarios
-  </button>
+      <button
+        *ngIf="puedeVerTrazabilidad"
+        [class.active]="pestanaActiva === 'trazabilidad'"
+        (click)="pestanaActiva = 'trazabilidad'">
+        Trazabilidad
+      </button>
 
-  <!-- BOTÓN VISIBLE SOLO PARA ADMIN Y SUPERVISOR -->
-  <button 
-    *ngIf="puedeRegistrarPersona" 
-    class="btn-success" 
-    (click)="abrirModalPersona()">
-    + Registrar Persona
-  </button>
+      <button
+        *ngIf="puedeCrearUsuarios"
+        [class.active]="pestanaActiva === 'usuarios'"
+        (click)="abrirGestionUsuarios()">
+        Gestionar Usuarios
+      </button>
 
-  <!-- BOTÓN VISIBLE SOLO PARA ADMIN -->
-  <button 
-    *ngIf="puedeCrearUsuarios" 
-    class="btn-primary" 
-    (click)="abrirModal()">
-    + Pre-crear Usuario
-  </button>
+      <button
+        *ngIf="puedeRegistrarPersona"
+        class="btn-success"
+        (click)="abrirModalPersona()">
+        + Registrar Persona
+      </button>
 
-  <button class="btn-danger" (click)="salir()">Cerrar Sesión</button>
-</nav>
-  </header>
+      <button
+        *ngIf="puedeCrearUsuarios"
+        class="btn-primary"
+        (click)="abrirModal()">
+        + Pre-crear Usuario
+      </button>
+
+      <button class="btn-danger" (click)="salir()">
+        Cerrar Sesión
+      </button>
+    </nav>
+  </div>
+
+  <div class="navbar-logo navbar-logo--derecho">
+    <img src="imagenes/logo.png" alt="Logo Centro Vida" />
+  </div>
+</header>
 
   <!-- ================= VISTA 1: TRAZABILIDAD ================= -->
   <section *ngIf="pestanaActiva === 'trazabilidad'" class="contenido-tab">
@@ -593,6 +604,7 @@
 
   </section>
 
+  <!-- ================= MODAL Rpre crear usuario ================= -->
     <div class="modal-overlay" *ngIf="mostrarModalCrear">
     <div class="modal-card">
       <div class="modal-header">

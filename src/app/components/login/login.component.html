@@ -1,40 +1,58 @@
-<div class="login-container">
-  <div class="login-card">
-    <h2>Alcaldía de Ramiriquí</h2>
-    <p class="subtitulo">Ingreso al Sistema de Información</p>
+<div class="login-wrapper">
+  <video
+  class="video-fondo"
+  autoplay
+  loop
+  playsinline
+  [muted]="true"
+  aria-hidden="true"
+>
+  <source src="videos/ramiriqui.mp4" type="video/mp4" />
+</video>
 
-    <form (ngSubmit)="onSubmit()">
-      <div class="campo">
-        <label for="usuario">Usuario:</label>
-        <input 
-          id="usuario" 
-          type="text" 
-          [(ngModel)]="credenciales.Usuario" 
-          name="usuario" 
-          placeholder="Ej: contratista_pedro" 
-          required 
-        />
-      </div>
+  <div class="video-overlay"></div>
 
-      <div class="campo">
-        <label for="contrasena">Contraseña:</label>
-        <input 
-          id="contrasena" 
-          type="password" 
-          [(ngModel)]="credenciales.Contrasena" 
-          name="contrasena" 
-          placeholder="••••••••" 
-          required 
-        />
-      </div>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- <img src="imagenes/logo.png" alt="Logo Centro Vida" class="logo-esquina-der" /> -->
+      <img src="imagenes/logo.png" alt="Escudo Ramiriquí" class="logo-esquina" />
+      <span class="badge-institucional">CENTRO VIDA</span>
+      <h2>Alcaldía de Ramiriquí</h2>
+      <p class="subtitulo">Ingreso al Sistema</p>
 
-      <button type="submit" [disabled]="cargando">
-        {{ cargando ? 'Verificando...' : 'Iniciar Sesión' }}
-      </button>
+      <form (ngSubmit)="onSubmit()">
+        <div class="campo">
+          <label for="usuario">Usuario:</label>
+          <input 
+            id="usuario" 
+            type="text" 
+            [(ngModel)]="credenciales.Usuario" 
+            name="usuario" 
+            placeholder="Ej: contratista_pedro" 
+            required 
+          />
+        </div>
 
-      <div *ngIf="mensajeError" class="alerta-error">
-        {{ mensajeError }}
-      </div>
-    </form>
+        <div class="campo">
+          <label for="contrasena">Contraseña:</label>
+          <input 
+            id="contrasena" 
+            type="password" 
+            [(ngModel)]="credenciales.Contrasena" 
+            name="contrasena" 
+            placeholder="••••••••" 
+            required 
+          />
+        </div>
+
+        <button type="submit" [disabled]="cargando">
+          {{ cargando ? 'Verificando...' : 'Iniciar Sesión' }}
+        </button>
+
+        <div *ngIf="mensajeError" class="alerta-error">
+          {{ mensajeError }}
+        </div>
+      </form>
+    </div>
   </div>
 </div>

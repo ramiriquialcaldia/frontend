@@ -1,548 +1,1225 @@
-.panel-container {
-  padding: 25px;
-  font-family: Arial, sans-serif;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 15px;
-}
-
-.header-acciones {
-  display: flex;
-  gap: 12px;
-}
-
-.btn-crear {
-  background-color: #0d6efd;
-  color: white;
-  border: none;
-  padding: 9px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-crear:hover {
-  background-color: #0b5ed7;
-}
-
-.btn-salir {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 9px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-salir:hover {
-  background-color: #bb2d3b;
-}
-
-.seccion-tablas {
-  margin: 25px 0 15px 0;
-}
-
-.seccion-tablas select {
-  margin-left: 10px;
-  padding: 7px 12px;
-  font-size: 14px;
-}
-
-.tabla-scroll {
-  overflow-x: auto;
-  margin-top: 10px;
-}
-
-.tabla-datos {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tabla-datos th,
-.tabla-datos td {
-  border: 1px solid #ccc;
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.tabla-datos th {
-  background-color: #f2f2f2;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-card {
-  background: white;
-  padding: 25px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #1a365d;
-}
-
-.btn-cerrar-modal {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.campo {
-  margin-bottom: 15px;
-}
-
-.campo label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-/* Inputs y Select comparten las mismas medidas */
-.campo input,
-.campo select {
-  width: 100%;
-  padding: 9px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: #ffffff;
-}
-
-.modal-botones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn-cancelar {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-guardar {
-  background-color: #198754;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.btn-guardar:disabled {
-  background-color: #94d3a2;
-  cursor: not-allowed;
-}
-
-.alerta-exito {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #d1e7dd;
-  color: #0f5132;
-  border-radius: 4px;
-  font-size: 13px;
-  text-align: center;
-}
-
-.alerta-error {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #f8d7da;
-  color: #842029;
-  border-radius: 4px;
-  font-size: 13px;
-  text-align: center;
-}
-
-.panel-container {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-}
-
+/* ==========================================================================
+   BARRA SUPERIOR (NAVBAR) - 20% ALTO Y 100% ANCHO EXACTO
+   ========================================================================== */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f4f6f9;
-  padding: 12px 20px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-}
-
-.nav-links button {
-  margin-left: 8px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-}
-
-.nav-links button.active {
-  background-color: #0056b3;
-  color: white;
-  border-color: #0056b3;
-}
-
-.grid-tres-partes {
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 20px;
-  margin-top: 15px;
-}
-
-.card {
-  background: #ffffff;
-  border: 1px solid #e1e4e8;
-  border-radius: 6px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.data-table {
+  grid-template-columns: clamp(80px, 11vw, 150px) minmax(0, 1fr)
+                         clamp(80px, 11vw, 150px);
+  grid-template-areas: "izquierdo centro derecho";
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+  min-height: 20vh;
+  padding: 16px clamp(16px, 3vw, 40px);
+  background-color: #fff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.data-table th, .data-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
+.navbar-logo--izquierdo {
+  grid-area: izquierdo;
+  justify-self: start;
 }
 
-.data-table.selectable tbody tr:hover {
-  background-color: #f1f7ff;
-  cursor: pointer;
+.navbar-logo--derecho {
+  grid-area: derecho;
+  justify-self: end;
 }
 
-.badge {
-  background: #28a745;
-  color: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+.navbar-logo img {
+  display: block;
+  width: 100%;
+  max-width: 140px;
+  height: clamp(56px, 11vh, 96px);
+  object-fit: contain;
 }
 
-.mt-2 {
-  margin-top: 15px;
+.navbar-centro {
+  grid-area: centro;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
 }
 
-.alerta-vacio {
-  color: #777;
-  font-style: italic;
-}
-
-/* Ventana Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+.navbar .user-info,
+.navbar .nav-links {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  gap: 8px 12px;
 }
 
-.modal-card {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 8px;
+.navbar .user-info {
+  text-align: center;
+  overflow-wrap: anywhere;
+   font-size: 30px;
+}
+
+.navbar .nav-links button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "izquierdo derecho"
+      "centro centro";
+  }
+
+  .navbar-logo img {
+    height: 56px;
+  }
+}
+
+/* ==========================================================================
+trazabilidad
+   ========================================================================== */
+.contenido-tab > .tabla-scroll {
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  min-width: 0;
+  overflow-x: visible;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.btn-cerrar-modal {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.campo {
-  margin-bottom: 15px;
-}
-
-.campo label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.campo input, .campo select {
+.contenido-tab > .tabla-scroll > .data-table {
   width: 100%;
-  padding: 8px;
+  min-width: 0; /* Reemplaza el mínimo anterior de 900px */
+  table-layout: fixed;
+}
+
+.contenido-tab > .tabla-scroll > .data-table th,
+.contenido-tab > .tabla-scroll > .data-table td {
   box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 10px clamp(4px, 0.65vw, 10px);
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-.modal-botones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+/* Ancho de cada columna */
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(1) { width: 10%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(2) { width: 16%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(3) { width: 11%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(4) { width: 12%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(5) { width: 14%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(6) { width: 9%; }
+.contenido-tab > .tabla-scroll > .data-table thead th:nth-child(7) { width: 28%; }
+
+/* Espacio adicional antes de IP Cliente y Dispositivo */
+.contenido-tab > .tabla-scroll > .data-table tr > :is(th, td):nth-child(n + 6) {
+  padding-left: clamp(6px, 1.2vw, 18px);
 }
 
-.btn-cancelar {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
+/* Permite que la última columna se ajuste al ancho disponible */
+.contenido-tab > .tabla-scroll > .data-table th:last-child,
+.contenido-tab > .tabla-scroll > .data-table td:last-child {
+  min-width: 0; /* Reemplaza el mínimo anterior de 230px */
 }
 
-.btn-guardar {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.alerta-exito {
-  color: #155724;
-  background-color: #d4edda;
-  padding: 8px;
-  margin-top: 10px;
-  border-radius: 4px;
-}
-
-.alerta-error {
-  color: #721c24;
-  background-color: #f8d7da;
-  padding: 8px;
-  margin-top: 10px;
-  border-radius: 4px;
-}
-
-
-
-
-
-/* Botón verde para Registrar Persona */
-.btn-success {
-  background-color: #28a745;
-  color: rgb(184, 23, 23);
-  border: 1px solid #218838;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.btn-success:hover {
-  background-color: #218838;
-}
-
-/* Modal más ancho para el formulario de personas */
-.modal-card.modal-lg {
-  max-width: 750px;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-/* Distribución en 2 columnas para campos */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 18px;
-}
-
-
-/* Títulos de sección dentro del modal */
-.seccion-titulo {
-  color: #0056b3;
-  border-bottom: 1px solid #e1e4e8;
-  padding-bottom: 4px;
-  margin-top: 18px;
-  margin-bottom: 12px;
-  font-size: 15px;
-  font-weight: bold;
-}
-
-/* Campos que ocupan todo el ancho (2 columnas) */
-.form-grid .span-2 {
-  grid-column: span 2;
-}
-
-/* Textareas dentro del formulario */
-.form-grid textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: inherit;
-  resize: vertical;
+.contenido-tab > .tabla-scroll > .data-table .badge {
   box-sizing: border-box;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.contenido-tab > .tabla-scroll > .data-table {
+  border-collapse: collapse;
+}
+
+/* Línea horizontal discontinua entre registros */
+.contenido-tab > .tabla-scroll > .data-table tbody tr:not(:last-child) > td {
+  border-bottom: 1px dashed #94a3b8;
+}
+
+/* Resaltado suave de toda la fila */
+.contenido-tab > .tabla-scroll > .data-table tbody tr > td {
+  transition: background-color 150ms ease;
+}
+
+.contenido-tab > .tabla-scroll > .data-table tbody tr:hover > td {
+  background-color: #cbd5e1;
 }
 
 
+.contenido-tab > .tabla-scroll > .data-table thead th:first-child {
+  font-size: 13px;
+  font-weight: 700;
+  padding-inline: 8px;
+}
 
+/* ==========================================================================
+gestionar usuarios
+   ========================================================================== */
+   /* Tabla de gestión de usuarios */
+.contenido-tab > .data-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font: 14px/1.4 system-ui, sans-serif;
+  color: #1e293b;
+}
 
+.contenido-tab > .data-table th,
+.contenido-tab > .data-table td {
+  box-sizing: border-box;
+  padding: 10px clamp(4px, 0.8vw, 12px);
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
+.contenido-tab > .data-table thead th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+  border-bottom: 1px solid #cbd5e1;
+}
 
+.contenido-tab > .data-table thead th:first-child {
+  width: 6%;
+}
 
+.contenido-tab > .data-table thead th:last-child {
+  width: 16%;
+}
 
+.contenido-tab > .data-table tbody tr:not(:last-child) > td {
+  border-bottom: 1px dashed #94a3b8;
+}
 
+.contenido-tab > .data-table tbody tr:hover > td {
+  background-color: #dbe4ef;
+}
 
+/* Botones de acceso */
+.contenido-tab > .data-table .btn-sm {
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
 
+/* Quitar Acceso — verde */
+.contenido-tab > .data-table .btn-danger {
+  background-color: #15803d;
+}
 
+.contenido-tab > .data-table .btn-danger:hover {
+  background-color: #166534;
+}
 
+/* Reactivar Acceso — rojo */
+.contenido-tab > .data-table .btn-success {
+  background-color: #b91c1c;
+}
 
-
-
-
-
-
-
+.contenido-tab > .data-table .btn-success:hover {
+  background-color: #991b1b;
+}
 
 
 /* ==========================================================================
-   ESTILOS MINIMALISTAS CORPORATIVOS - DATOS COMPLETOS DE LA PERSONA
+tabla de incio
+   ========================================================================== */
+/* Listado de Adultos Mayores */
+.contenido-tab .data-table.selectable {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: #1e293b;
+  font: 14px/1.4 system-ui, sans-serif;
+}
+
+.contenido-tab .data-table.selectable :is(th, td) {
+  box-sizing: border-box;
+  padding: 9px clamp(4px, 0.8vw, 12px);
+  border: 0;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.contenido-tab .data-table.selectable thead tr:first-child th {
+  background-color: #eaf0f6;
+  font-weight: 700;
+}
+
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(1) { width: 15%; }
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(2) { width: 17%; }
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(3) { width: 17%; }
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(4) { width: 25%; }
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(5) { width: 12%; }
+.contenido-tab .data-table.selectable thead tr:first-child th:nth-child(6) { width: 14%; }
+
+/* Filtros */
+.contenido-tab .data-table.selectable .fila-filtros th {
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.contenido-tab .data-table.selectable .fila-filtros :is(input, select) {
+  min-width: 0;
+  max-width: 100%;
+  font-family: inherit;
+}
+
+/* Separadores y resaltado de las filas seleccionables */
+.contenido-tab .data-table.selectable tbody tr:not(:last-child) > td {
+  border-bottom: 1px dashed #94a3b8;
+}
+
+.contenido-tab .data-table.selectable tbody tr:has(.btn-sm) {
+  cursor: pointer;
+}
+
+.contenido-tab .data-table.selectable tbody tr:has(.btn-sm):is(:hover, :focus-within) > td {
+  background-color: #dbe4ef;
+}
+
+/* Ver Expediente */
+.contenido-tab .data-table.selectable .btn-sm {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background-color: #eff6ff;
+  color: #1e40af;
+  font: 600 12px/1.3 system-ui, sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.contenido-tab .data-table.selectable .btn-sm:hover {
+  background-color: #dbeafe;
+}
+
+/* ==========================================================================
+   hoja de vida persona
    ========================================================================== */
 
-.columna.parte-1 .card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-top: 3px solid #0f2942;
-  border-radius: 6px;
-  padding: 20px;
+.expediente-persona {
+  --exp-texto: #1e293b;
+  --exp-secundario: #475569;
+  --exp-borde: #dbe3ed;
+  --exp-fondo: #f8fafc;
+  --exp-azul: #1d4ed8;
+
+  min-width: 0;
+  color: var(--exp-texto);
+  font: 14px/1.5 system-ui, sans-serif;
 }
 
-.columna.parte-1 .card h4 {
-  margin: 0 0 16px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #0f2942;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Cuadrícula en 2 columnas limpias sin cajas grises */
-.ficha-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 24px;
-}
-
-.ficha-item {
-  padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
+.expediente-persona .encabezado-expediente {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 16px;
 }
 
-.ficha-item.span-2 {
-  grid-column: span 2;
+.expediente-persona .encabezado-expediente h3 {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 24px);
+  overflow-wrap: anywhere;
 }
 
-.ficha-item:last-child {
-  border-bottom: none;
+/* Tres columnas, con un poco más de espacio para la hoja de vida. */
+.expediente-persona .grid-tres-partes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
 }
 
-.ficha-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-  margin-bottom: 3px;
+.expediente-persona .grid-tres-partes > .columna {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
 }
 
-.ficha-valor {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #0f172a;
-  line-height: 1.4;
-  word-break: break-word;
+.expediente-persona .columna > .card {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(12px, 1.4vw, 20px);
+  border: 1px solid var(--exp-borde);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(15 23 42 / 5%);
+  overflow-wrap: anywhere;
 }
 
-.card-header-estado {
+.expediente-persona .card h4 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.expediente-persona .card > h4,
+.expediente-persona .card-header-estado {
+  margin-bottom: 12px;
+}
+
+.expediente-persona .card-header-estado {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.expediente-persona .card-header-estado > div,
+.expediente-persona .parte-2 .card > div:first-child > div,
+.expediente-persona .parte-3 .card > div:first-child {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Estado de la persona. */
+.expediente-persona .card-header-estado :is(.badge-activo, .badge-inactivo) {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.expediente-persona .card-header-estado .badge-activo {
+  background-color: #15803d;
+}
+
+.expediente-persona .card-header-estado .badge-inactivo {
+  background-color: #b91c1c;
+}
+
+/* Datos de la persona y autorización. */
+.expediente-persona .ficha-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.expediente-persona .ficha-item {
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--exp-fondo);
+}
+
+.expediente-persona .ficha-item.span-2 {
+  grid-column: 1 / -1;
+}
+
+.expediente-persona .ficha-label,
+.expediente-persona .ficha-valor {
+  display: block;
+}
+
+.expediente-persona .ficha-label {
+  color: var(--exp-secundario);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.expediente-persona .ficha-valor {
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* Valoraciones e indicadores IA. */
+.expediente-persona .item-card {
+  padding: 12px;
+  border: 1px solid var(--exp-borde);
+  border-radius: 8px;
+  background: var(--exp-fondo);
+}
+
+.expediente-persona .item-card + .item-card {
+  margin-top: 8px;
+}
+
+.expediente-persona .item-card p {
+  margin: 0 0 6px;
+}
+
+.expediente-persona .item-card p:last-of-type {
+  margin-bottom: 0;
+}
+
+.expediente-persona .item-card > hr {
+  display: none;
+}
+
+.expediente-persona .alerta-vacio {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  color: var(--exp-secundario);
+  background: var(--exp-fondo);
+}
+
+/* Carga y tabla de PDF. */
+.expediente-persona input[type="file"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  background: var(--exp-fondo);
+  font: inherit;
+  font-size: 12px;
+}
+
+.expediente-persona .parte-1 .data-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.expediente-persona .parte-1 .data-table :is(th, td) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.expediente-persona .parte-1 .data-table th:first-child {
+  width: 32%;
+}
+
+/* Sustituye el borde sólido que está escrito en el HTML de cada fila. */
+.expediente-persona .parte-1 .data-table tbody tr:not(:last-child) {
+  border-bottom: 1px dashed #94a3b8 !important;
+}
+
+.expediente-persona .parte-1 .data-table tbody tr:hover > td {
+  background-color: #dbe4ef;
+}
+
+/* Botones del expediente. */
+.expediente-persona :is(.btn-sm, .btn-secondary) {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--exp-borde);
+  border-radius: 6px;
+  background: var(--exp-fondo);
+  color: var(--exp-texto);
+  font: 600 12px/1.3 system-ui, sans-serif;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.expediente-persona :is(.btn-info, .btn-primary).btn-sm {
+  border-color: var(--exp-azul);
+  background: var(--exp-azul);
+  color: #fff;
+}
+
+.expediente-persona button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+@media (max-width: 960px) {
+  .expediente-persona .grid-tres-partes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+modal pre cear usuario
+   ========================================================================== */
+   .modal-overlay:has(> .modal-card #nuevo_usuario) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+  background-color: rgb(15 23 42 / 55%);
+}
+
+.modal-card:has(#nuevo_usuario) {
+  box-sizing: border-box;
+  width: min(100%, 460px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: clamp(16px, 4vw, 24px);
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  background-color: #fff;
+  color: #1e293b;
+  box-shadow: 0 16px 48px rgb(15 23 42 / 22%);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+.modal-card:has(#nuevo_usuario) .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.columna.parte-1 .card .card-header-estado h4 {
+.modal-card:has(#nuevo_usuario) .modal-header h3 {
   margin: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+  font-size: 19px;
+  line-height: 1.3;
 }
 
-.badge-activo {
-  display: inline-block;
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.modal-card:has(#nuevo_usuario) form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
 }
 
-.badge-inactivo {
-  display: inline-block;
+.modal-card:has(#nuevo_usuario) .campo {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.modal-card:has(#nuevo_usuario) .campo label {
+  font-weight: 600;
+}
+
+.modal-card:has(#nuevo_usuario) .campo :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.modal-card:has(#nuevo_usuario) :is(input, select, button):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.modal-card:has(#nuevo_usuario) .modal-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.modal-card:has(#nuevo_usuario) :is(.btn-cerrar-modal, .btn-cancelar, .btn-guardar) {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #f8fafc;
+  color: #334155;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-card:has(#nuevo_usuario) .btn-cerrar-modal {
+  flex-shrink: 0;
+  padding: 5px 9px;
+}
+
+.modal-card:has(#nuevo_usuario) :is(.btn-cerrar-modal, .btn-cancelar):hover {
+  background-color: #e2e8f0;
+}
+
+.modal-card:has(#nuevo_usuario) .btn-guardar {
+  border-color: #1d4ed8;
+  background-color: #1d4ed8;
+  color: #fff;
+}
+
+.modal-card:has(#nuevo_usuario) .btn-guardar:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.modal-card:has(#nuevo_usuario) .btn-guardar:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.modal-card:has(#nuevo_usuario) :is(.alerta-exito, .alerta-error) {
+  padding: 9px 12px;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.modal-card:has(#nuevo_usuario) .alerta-exito {
+  background-color: #f0fdf4;
+  color: #166534;
+}
+
+.modal-card:has(#nuevo_usuario) .alerta-error {
   background-color: #fef2f2;
   color: #991b1b;
-  border: 1px solid #fecaca;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+modal crear persona
+   ========================================================================== */
+.modal-overlay:has(> .modal-card input[name="p_nombres"]) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 12px;
+  background-color: rgb(15 23 42 / 55%);
+}
+
+.modal-card.modal-lg:has(input[name="p_nombres"]) {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(100%, 880px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  background: #fff;
+  color: #1e293b;
+  box-shadow: 0 16px 48px rgb(15 23 42 / 22%);
+  font: 14px/1.45 system-ui, sans-serif;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .modal-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px clamp(14px, 3vw, 24px);
+  border-bottom: 1px solid #dbe3ed;
+  background-color: #f8fafc;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .modal-header h3 {
+  margin: 0;
+  font-size: clamp(16px, 2.3vw, 21px);
+  line-height: 1.3;
+}
+
+.modal-lg:has(input[name="p_nombres"]) > form {
+  min-height: 0;
+  margin: 0;
+  padding: 16px clamp(14px, 3vw, 24px) 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Títulos y campos de las cinco secciones */
+.modal-lg:has(input[name="p_nombres"]) .seccion-titulo {
+  margin: 20px 0 12px;
+  padding: 9px 12px;
+  border-left: 3px solid #2563eb;
+  border-radius: 4px;
+  background-color: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .seccion-titulo:first-child {
+  margin-top: 0;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .campo {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .campo.span-2 {
+  grid-column: 1 / -1;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .campo label {
+  color: #334155;
+  font-weight: 600;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .campo :is(input, select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .campo input[readonly] {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.modal-lg:has(input[name="p_nombres"]) textarea {
+  resize: vertical;
+}
+
+.modal-lg:has(input[name="p_nombres"]) input[type="file"] {
+  flex: 1 1 250px;
+  max-width: 100%;
+  border-style: dashed;
+}
+
+.modal-lg:has(input[name="p_nombres"]) :is(input, select, textarea, button):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Botones de cierre, cancelación y guardado */
+.modal-lg:has(input[name="p_nombres"]) .modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid #dbe3ed;
+}
+
+.modal-lg:has(input[name="p_nombres"]) :is(.btn-cerrar-modal, .btn-cancelar, .btn-guardar) {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #f8fafc;
+  color: #334155;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .btn-cerrar-modal {
+  flex-shrink: 0;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .btn-guardar {
+  border-color: #1d4ed8;
+  background-color: #1d4ed8;
+  color: #fff;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .btn-guardar:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .btn-guardar:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.modal-lg:has(input[name="p_nombres"]) :is(.alerta-exito, .alerta-error) {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .alerta-exito {
+  background-color: #f0fdf4;
+  color: #166534;
+}
+
+.modal-lg:has(input[name="p_nombres"]) .alerta-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+@media (max-width: 620px) {
+  .modal-lg:has(input[name="p_nombres"]) .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .modal-lg:has(input[name="p_nombres"]) .modal-botones > button {
+    flex: 1 1 auto;
+  }
+}
+
+/* ==========================================================================
+modal valoracion
+   ========================================================================== */
+.modal-overlay:has(> .modal-card textarea[name="val_detalle"]) {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 12px;
+  background-color: rgb(15 23 42 / 55%);
+}
+
+.modal-card:has(textarea[name="val_detalle"]) {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(100%, 620px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  background-color: #fff;
+  color: #1e293b;
+  box-shadow: 0 16px 48px rgb(15 23 42 / 22%);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .modal-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px clamp(14px, 3vw, 24px);
+  border-bottom: 1px solid #dbe3ed;
+  background-color: #f8fafc;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .modal-header h3 {
+  margin: 0;
+  font-size: clamp(16px, 2.6vw, 20px);
+  line-height: 1.3;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) > form {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 16px clamp(14px, 3vw, 24px) 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .campo {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .campo label {
+  color: #334155;
+  font-weight: 600;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .campo :is(input, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #fff;
+  color: #1e293b;
+  font: inherit;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) input[readonly] {
+  color: #475569;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) :is(textarea, button):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .modal-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #dbe3ed;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) :is(.btn-cerrar-modal, .btn-cancelar, .btn-guardar) {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background-color: #f8fafc;
+  color: #334155;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .btn-cerrar-modal {
+  flex-shrink: 0;
+  padding: 5px 9px;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .btn-guardar {
+  border-color: #1d4ed8;
+  background-color: #1d4ed8;
+  color: #fff;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .btn-guardar:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .btn-guardar:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) :is(.alerta-exito, .alerta-error) {
+  padding: 9px 12px;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .alerta-exito {
+  background-color: #f0fdf4;
+  color: #166534;
+}
+
+.modal-card:has(textarea[name="val_detalle"]) .alerta-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+
+
+/* reposivo */
+/* Tablets: encabezado compacto y expediente con más espacio. */
+@media (max-width: 1100px) {
+  .navbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "izquierdo derecho"
+      "centro centro";
+    min-height: 0;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .navbar-logo img {
+    width: clamp(60px, 12vw, 105px);
+    height: clamp(46px, 8vw, 68px);
+  }
+
+  .navbar .nav-links button {
+    min-height: 44px;
+  }
+
+  .expediente-persona .grid-tres-partes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .expediente-persona .grid-tres-partes > .parte-1 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Celulares y tablets en vertical. */
+@media (max-width: 820px) {
+  .navbar .nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .navbar .nav-links button {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .contenido-tab > div:has(> .data-table.selectable) > div:first-child,
+  .contenido-tab:has(> .data-table) > div:first-child {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .expediente-persona {
+    padding-inline: 4px;
+  }
+
+  .expediente-persona .grid-tres-partes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  /* Conserva los encabezados en el HTML y muestra sus filtros. */
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .contenido-tab .data-table thead tr:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* Mantén visible el encabezado de la tabla de PDF del expediente. */
+  .expediente-persona .data-table thead tr:first-child {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .contenido-tab .data-table.selectable thead {
+    display: block;
+  }
+
+  .contenido-tab .data-table.selectable .fila-filtros {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 10px;
+    border-radius: 8px;
+  }
+
+  .contenido-tab .data-table.selectable .fila-filtros :is(input, select) {
+    min-height: 40px;
+  }
+
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) tbody > tr {
+    display: block;
+    padding: 4px 10px;
+    border: 1px solid #dbe3ed;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) tbody > tr > td:not([colspan]) {
+    display: grid;
+    grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    padding: 7px 4px;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) tbody > tr > td:not([colspan]) + td {
+    border: 0;
+    border-top: 1px dashed #cbd5e1;
+  }
+
+  :is(
+    .contenido-tab .data-table.selectable,
+    .contenido-tab > .data-table,
+    .contenido-tab > .tabla-scroll > .data-table
+  ) tbody > tr > td:not([colspan])::before {
+    content: var(--etiqueta, "");
+    color: #334155;
+    font-weight: 700;
+  }
+
+  /* Etiquetas del listado de adultos mayores. */
+  .contenido-tab .data-table.selectable td:nth-child(1) { --etiqueta: "Documento"; }
+  .contenido-tab .data-table.selectable td:nth-child(2) { --etiqueta: "Nombres"; }
+  .contenido-tab .data-table.selectable td:nth-child(3) { --etiqueta: "Apellidos"; }
+  .contenido-tab .data-table.selectable td:nth-child(4) { --etiqueta: "Dirección"; }
+  .contenido-tab .data-table.selectable td:nth-child(5) { --etiqueta: "Estado"; }
+  .contenido-tab .data-table.selectable td:nth-child(6) { --etiqueta: "Acción"; }
+
+  /* Etiquetas de gestión de usuarios. */
+  .contenido-tab > .data-table td:nth-child(1) { --etiqueta: "ID"; }
+  .contenido-tab > .data-table td:nth-child(2) { --etiqueta: "Usuario"; }
+  .contenido-tab > .data-table td:nth-child(3) { --etiqueta: "Nombre completo"; }
+  .contenido-tab > .data-table td:nth-child(4) { --etiqueta: "Profesión / Cargo"; }
+  .contenido-tab > .data-table td:nth-child(5) { --etiqueta: "Rol"; }
+  .contenido-tab > .data-table td:nth-child(6) { --etiqueta: "Estado acceso"; }
+  .contenido-tab > .data-table td:nth-child(7) { --etiqueta: "Revocado"; }
+  .contenido-tab > .data-table td:nth-child(8) { --etiqueta: "Acción"; }
+
+  /* Etiquetas de trazabilidad. */
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(1) { --etiqueta: "Identificación"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(2) { --etiqueta: "Acción realizada"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(3) { --etiqueta: "Tabla afectada"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(4) { --etiqueta: "Usuario"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(5) { --etiqueta: "Fecha y hora"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(6) { --etiqueta: "IP cliente"; }
+  .contenido-tab > .tabla-scroll > .data-table td:nth-child(7) { --etiqueta: "Dispositivo"; }
+
+  .contenido-tab .data-table.selectable tbody .btn-sm,
+  .contenido-tab > .data-table tbody .btn-sm {
+    min-height: 44px;
+  }
+
+  .modal-card .campo :is(input, select, textarea) {
+    font-size: 16px;
+  }
+
+  .modal-card .modal-botones > button {
+    min-height: 44px;
+    flex: 1 1 150px;
+  }
 }

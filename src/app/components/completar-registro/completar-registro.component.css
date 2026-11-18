@@ -95,3 +95,51 @@ button:disabled {
   border-radius: 4px;
   text-align: center;
 }
+
+
+/* resoponsividad  */
+
+
+.registro-container {
+  box-sizing: border-box;
+  min-height: 90svh;
+  padding: clamp(12px, 3vw, 24px);
+}
+
+.registro-card {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 500px;
+  padding: clamp(16px, 4vw, 30px);
+}
+
+.registro-card h2 {
+  font-size: clamp(20px, 4vw, 26px);
+  line-height: 1.25;
+}
+
+.registro-card .campo input,
+.registro-card button {
+  min-height: 44px;
+  font-size: 16px;
+}
+
+.registro-card .alerta-exito,
+.registro-card .alerta-error {
+  overflow-wrap: anywhere;
+}
+
+/* Celulares y pantallas bajas en horizontal */
+@media (max-width: 600px), (max-height: 500px) {
+  .registro-container {
+    align-items: flex-start;
+  }
+
+  .registro-card .subtitulo {
+    margin-bottom: 18px;
+  }
+
+  .registro-card .campo {
+    margin-bottom: 12px;
+  }
+}

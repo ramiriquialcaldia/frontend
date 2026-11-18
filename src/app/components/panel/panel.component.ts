@@ -375,11 +375,11 @@ guardarPersona(): void {
             this.mensajePersona = '¡Persona y Autorización registradas exitosamente!';
 
             // >>> DISPARO DE AUDITORÍA CON GPS Y USUARIO <<<
-            this.authService.registrarAccionAuditoria(
-              `CREAR_PERSONA_ID_${nuevoIdPersona}`,
-              'PERSONAS',
-              `Doc: ${this.nuevaPersona.NumeroDocumento} | ${this.nuevaPersona.Nombres} ${this.nuevaPersona.Apellidos}`
-            );
+            // this.authService.registrarAccionAuditoria(
+            //   `CREAR_PERSONA_ID_${nuevoIdPersona}`,
+            //   'PERSONAS',
+            //   `Doc: ${this.nuevaPersona.NumeroDocumento} | ${this.nuevaPersona.Nombres} ${this.nuevaPersona.Apellidos}`
+            // );
 
             this.cargarDatos();
             setTimeout(() => {
@@ -453,11 +453,11 @@ guardarPersona(): void {
         this.mensajeValoracion = '¡Valoración guardada exitosamente!';
 
         // >>> DISPARO DE AUDITORÍA CON GPS Y USUARIO <<<
-        this.authService.registrarAccionAuditoria(
-          `CREAR_VALORACION_ID_${res.id_valoracion || this.nuevaValoracion.PersonaId}`,
-          'VALORACIONES_INSTITUCIONALES',
-          `PersonaId: ${this.nuevaValoracion.PersonaId} | Paciente: ${this.nuevaValoracion.NombrePersona}`
-        );
+        // this.authService.registrarAccionAuditoria(
+        //   `CREAR_VALORACION_ID_${res.id_valoracion || this.nuevaValoracion.PersonaId}`,
+        //   'VALORACIONES_INSTITUCIONALES',
+        //   `PersonaId: ${this.nuevaValoracion.PersonaId} | Paciente: ${this.nuevaValoracion.NombrePersona}`
+        // );
 
         this.cargarDatos();
         setTimeout(() => {
@@ -500,11 +500,11 @@ cambiarEstadoPersona(persona: any, event: MouseEvent): void {
           }
 
           // Registrar auditoría con GPS y el ID del usuario en sesión (superjuan)
-          this.authService.registrarAccionAuditoria(
-            `CAMBIO_ESTADO_${proximoEstado}_ID_${persona.Id}`,
-            'PERSONAS',
-            `Persona: ${nombreCompleto}`
-          );
+          // this.authService.registrarAccionAuditoria(
+          //   `CAMBIO_ESTADO_${proximoEstado}_ID_${persona.Id}`,
+          //   'PERSONAS',
+          //   `Persona: ${nombreCompleto}`
+          // );
 
           this.cargarDatos();
         },
